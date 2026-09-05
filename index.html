@@ -3,97 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Live BIN Finder</title>
+    <title>Card BIN Lookup</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: #f8f9fa; color: #212529; }
-        .card { max-width: 400px; margin: 40px auto; padding: 30px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
-        h3 { margin-top: 0; color: #495057; font-weight: 600; text-align: center; }
-        input, button { padding: 12px; width: 100%; margin-top: 15px; box-sizing: border-box; border-radius: 6px; font-size: 15px; }
-        input { border: 1px solid #ced4da; outline: none; text-align: center; letter-spacing: 2px; font-weight: bold; }
-        input:focus { border-color: #2b6cb0; box-shadow: 0 0 0 3px rgba(66,153,225,0.2); }
-        button { background: #2b6cb0; color: white; border: none; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #2c5282; }
-        .result-box { margin-top: 25px; padding: 15px; background: #edf2f7; border-radius: 6px; display: none; font-size: 14px; line-height: 1.8; }
-        .error-text { color: #e53e3e; margin-top: 15px; font-size: 14px; font-weight: 500; text-align: center; }
-        .label { font-weight: 600; color: #4a5568; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .card {
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+        h3 {
+            margin-top: 0;
+            color: #495057;
+            font-weight: 600;
+            text-align: center;
+        }
+        input, button {
+            padding: 12px;
+            width: 100%;
+            margin-top: 15px;
+            box-sizing: border-box;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        input {
+            border: 1px solid #ced4da;
+            outline: none;
+            text-align: center;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        input:focus {
+            border-color: #2b6cb0;
+            box-shadow: 0 0 0 3px rgba(66,153,225,0.2);
+        }
+        button {
+            background: #2b6cb0;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2c5282;
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 6px;
+            display: none;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .error-text {
+            color: #e53e3e;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .label {
+            font-weight: 600;
+            color: #4a5568;
+        }
     </style>
 </head>
 <body>
-
 <div class="card">
     <h3>Card BIN Lookup</h3>
-    <input type="text" id="binInput" placeholder="Enter first 6 digits" maxlength="6" pattern="\d*">
-    <button onclick="executeBinLookup()">Find Card Details</button>
-
+    <input
+        type="text"
+        id="binInput"
+        placeholder="Enter first 6 digits"
+        maxlength="6"
+        inputmode="numeric"
+    >
+    <button onclick="executeBinLookup()">
+        Find Card Details
+    </button>
     <div id="errorDisplay" class="error-text"></div>
-
     <div id="resultDisplay" class="result-box">
-        <div><span class="label">Network/Scheme:</span> <span id="outBrand"></span></div>
-        <div><span class="label">Card Type:</span> <span id="outType"></span></div>
-        <div><span class="label">Bank/Issuer:</span> <span id="outBank"></span></div>
-        <div><span class="label">Origin Country:</span> <span id="outCountry"></span></div>
+        <div>
+            <span class="label">Network/Scheme:</span>
+            <span id="outBrand"></span>
+        </div>
+        <div>
+            <span class="label">Card Type:</span>
+            <span id="outType"></span>
+        </div>
+        <div>
+            <span class="label">Bank/Issuer:</span>
+            <span id="outBank"></span>
+        </div>
+        <div>
+            <span class="label">Origin Country:</span>
+            <span id="outCountry"></span>
+        </div>
     </div>
 </div>
-
 <script>
+    // Your Cloudflare Worker
+    const API_BASE =
+        "https://bing.ctinker-a7-b62.workers.dev";
     async function getCardMetadata(bin) {
-        // Direct public client-side endpoint that handles GitHub Pages traffic flawlessly
-        const url = `https://binlist.net{bin}`;
-        
+        const url = `${API_BASE}/bin/${bin}`;
         try {
-            const response = await fetch(url, {
-                headers: {
-                    'Accept-Version': '3'
-                }
-            });
-            
+            const response = await fetch(url);
             if (!response.ok) {
-                if (response.status === 404) throw new Error("BIN not found");
-                if (response.status === 429) throw new Error("Rate limit hit. Try again in a minute.");
+                if (response.status === 404) {
+                    throw new Error("BIN not found");
+                }
+                if (response.status === 429) {
+                    throw new Error("Rate limit hit");
+                }
                 throw new Error("Network error");
             }
-            
             return await response.json();
         } catch (err) {
             console.error("Lookup Failure:", err);
             throw err;
         }
     }
-
     async function executeBinLookup() {
-        const userInput = document.getElementById('binInput').value.trim();
-        const display = document.getElementById('resultDisplay');
-        const errDisplay = document.getElementById('errorDisplay');
-
-        display.style.display = 'none';
-        errDisplay.innerText = '';
-
+        const userInput =
+            document.getElementById("binInput").value.trim();
+        const display =
+            document.getElementById("resultDisplay");
+        const errDisplay =
+            document.getElementById("errorDisplay");
+        display.style.display = "none";
+        errDisplay.innerText = "";
+        // Make sure exactly 6 digits were entered
         if (!/^\d{6}$/.test(userInput)) {
-            errDisplay.innerText = "Please enter exactly 6 numbers.";
+            errDisplay.innerText =
+                "Please enter exactly 6 numbers.";
             return;
         }
-
         try {
-            const data = await getCardMetadata(userInput);
-            
-            // Unpack clean variables out of the response mapping
-            document.getElementById('outBrand').innerText = (data.scheme || 'Unknown').toUpperCase();
-            document.getElementById('outType').innerText = (data.type || 'Unknown').toUpperCase();
-            document.getElementById('outBank').innerText = data.bank?.name || 'Unknown Bank';
-            document.getElementById('outCountry').innerText = data.country?.name || 'Unknown Country';
-            
-            display.style.display = 'block';
+            const data =
+                await getCardMetadata(userInput);
+            // Display API response
+            document.getElementById("outBrand").innerText =
+                (data.scheme || "Unknown").toUpperCase();
+            document.getElementById("outType").innerText =
+                (data.type || "Unknown").toUpperCase();
+            document.getElementById("outBank").innerText =
+                data.bank?.name || "Unknown Bank";
+            document.getElementById("outCountry").innerText =
+                data.country?.name || "Unknown Country";
+            display.style.display = "block";
         } catch (fail) {
             if (fail.message.includes("BIN not found")) {
-                errDisplay.innerText = "This specific BIN sequence is not in the system database.";
+                errDisplay.innerText =
+                    "This BIN was not found.";
             } else if (fail.message.includes("Rate limit")) {
-                errDisplay.innerText = fail.message;
+                errDisplay.innerText =
+                    "Too many requests. Try again later.";
             } else {
-                errDisplay.innerText = "System error connection. Check your internet connection.";
+                errDisplay.innerText =
+                    "Unable to connect to the API.";
             }
         }
     }
 </script>
-
 </body>
 </html>

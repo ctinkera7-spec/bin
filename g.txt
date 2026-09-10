@@ -19,3 +19,116 @@ headers = {
 data = 'type=card&billing_details[name]=Anonymous&billing_details[address][postal_code]=32839&card[number]=5523426692360534&card[cvc]=972&card[exp_month]=08&card[exp_year]=29&guid=ff9d84b2-8755-4c07-94b0-5ef6f83eaeac71e276&muid=f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a&sid=0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447&payment_user_agent=stripe.js%2F6c540ed284%3B+stripe-js-v3%2F6c540ed284%3B+split-card-element&referrer=https%3A%2F%2Fesnorg.giveforms.com&time_on_page=77249&client_attribution_metadata[client_session_id]=447fd8cb-e96a-4f6c-b350-db0d1fddc317&client_attribution_metadata[merchant_integration_source]=elements&client_attribution_metadata[merchant_integration_subtype]=split-card-element&client_attribution_metadata[merchant_integration_version]=2017&client_attribution_metadata[wallet_config_id]=506d5d01-2065-44bd-a9e9-ea2bf632c32a&key=pk_live_2T8mSGhZyE3A8I2kToOFE1R9&radar_options[hcaptcha_token]=P1_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZCI6MCwiZXhwIjoxNzg5MDc4OTM5LCJjZGF0YSI6IlhkYWZGQkJESDFDM0xhL0R2NFd0RWVLenhQV2dTRGJuRnRPd1BTSXJUK1Rwb0k2dFAvb2IwQkJIM2ZNVVVqVm5HaklDNCtESFVHS0VUczN0eVVuTWppMDNlOWkwWUllV084eHN6OFVIc0Fad0NacWVvcDZaUGNnTkRHd2xlSURsS05URGtpSlhQMjE4UStWTU94UVVscHpYYUFDcXZ3R0VtVXNnSmU4K3BFUXE2eDYzVHJNclRXS0k4Wnl1TmhYOXRlRjZzdmo2NjZ6ODIzYjFOSE5uV1J1ZmlsV3RwZGkvVkN5WnRyMElqTzM3aklJZDNSUFlUcWNSOWpicWhFSE1OanhjSlQ2TkZtVmwzbXdKeVh3SzBkaFgrbXExSmwwWkl4aU1jYlRZL2pWdDk2M09ZZWJJZVNlWkhMcmdHSVU1bnVDOXBoZXRXRnJ5Z1dMd0tHMEZDbFQyd1ZTNVZTVmVDUXR6UnRzVy8wVT1ZQ2JtNFFuWUMxU2c5MFV6IiwicGFzc2tleSI6IkhlMGMwTHNkaVZHaGpFZ0hTSklETkw3d2pxKzRGUzF4UkxEYzJLQVMrKzQxK1p1bzU1N3BkQWo5TjlaaEVtYWVIS21jSjd3dkQrbHFWRGpISXplK0tCam5FV2xDZVB4VHg4Z3FLM3lUVzlHc2NaQkVhRWtYYU8wU1lOUkJCMVFwUW50ZUNjZ3h3SEpTWXFwNkROaW83M1JTOFFSeU5JamVwUVhEUkNLZDhKZ2pUVVI0Q0F5a1lRT2U4TXlsVW8yakRYQ2RINjMzYklOcFdOenFoQ1VKQmEyZEJWUTNobXJXYk9jblBsSnVWTUthdXFBOGFIbGdRWE1MUTNNbE9Qelpub3Jaa2xMRHdDR012VS9IL3d6aWdFa2h3Yk0zSldOUDA1ZHViZUVNL091cXkwWGprNjVhN015Y0tpY0RTMENCT0VjeFd3U1RYYU9GZE5WL3JWQ0VlR2ZKU1VCYUhEc0M0ZHpDSTVjSmFqMWRCR2t5U2xZUnN3Tm5mQ3o2bnFYN0tvc1lObVB5UENuSkdpQlk5RG9CUjhjZEhuUWJkdEhBL3ZCSTc5L3VqdG5RbW1QcTdkTkZDRkxQYzV0M2F5N0UyVXhIWjJTVlZLWlZORTlkOEZjd0ZkUFpLMzhpbnNuci9ab1VhREVJUW56L050ZzFCTmtOVDdSSXZNZExCRURML251OUl1cTBBMkI4RGtqa2R4cXRuZHBsaU9EWUFnQXBkbno2ejIvSFpHbmtiMVlHNFNjZDFHSE5NUEJQM0RxTzJyU0xlaGVtWUMwMjl2T3g0Y0NROTRVWnBUWkcxaFJzcWJmQnYrR2E5VUZLaGlBWkMzZWJHOCtyNmt3U0R1azJjRjN2OVV1V2U0YmJqT1RRbHpEQ1lkdkoyc2dnZ0NBQjJ4N0EycWFaK1NqYWg5K1Q5M1U1d296ZUlNSlNGQm1tUjZJcWIzUk4vVUUrRnJGQkZ3enlXZW1YN2xScnNOQnBKeXdzSWZUSVI0dUg1MklycEdRbXM2VDBRNERkbmpQU3hES1FJUkFjb29mMEsrN2xnaGpPckEvYlhlR0dMbGNRZE1VQ01SaVpmR001RzRZcGkzdTNvaHVwTXVnU0drbW5qUUh4OXJHZjRFMlcyeEVaQW8zVXVqSDU5ZG5relJCUXB0d0RLTmkzWmFTSzI4TDNpUXZST2lkTVc1di8zR2dXaXMwV21GNzdCdXZ5UmFsQjlTVHQ0dHQ3UVlvZlNoRnhlMCsyL01xSFc4bXRXblRJRExGaElZQXVDOFVrNTB0SmRGNkFBVTRVbFliWGdCZXRNVEVDMEd2Z0dITVo0bHY1a09VTzlFOE5pTnVUN1FLb1B3bTBGN0IzQVVLTXpHaXVwYWJWamp6VFo4OS9OZk0yemNQWGNhQlZSSUdST1NzOCtnYk90TGtna2Z2eU9wdTE4a0tLNk9VL3d2blZFSHlEelhxOHBWK1hXNEJzUDVxM2hrTVl6RFN6VjQ0YnZyNjExY3RyZTBwbGdGTVFsTnB2SzByMVdqOUZYSTRrV0VlUDRTeHJTM0dxV2hiY1pwZk5vTEk1SmtCRk82d29taEVUUU5obklEaFN2bTJkUzhUVjd3aHJGR2hoWHE1TDI2TlNjTUVNMnRxSFBZL2ZKOHQxenJ1M21KOStnVXNXVG5lMFgrUnJ3MXFGUWRXUmpPd2pyMTRtalVxRHM1U1M0d3ZMNS9JdjB2OHoyZkZlYUxIWnRhMW5SbDhFMytTdXo3d0QwekduVC8xVThia1A1K1czay9RVHJtanBVVUpwQlZmSG9yd3k5RXpYMGN6NmpFaXVIMTBpNXAzRE9tc2NSbXAzZUh1bWZ1eW1IUjgya3l4S1BudnRvclB5S2JGS0JUQS9RNDFVdVFHdEdJRjJaRlNyR1NGdFpjZHVWQkx3OVhicU1LZzJTcGN6QVdpUmo5bXgzWEc5SkpqK1hUTkxNUmprS2ZLMnBKTUpvR3h6VWR6UGtQRVI4cEJZMG8yZWdoQStvYzE1M3pRRXpuSEZEdjV5d0drblJDc1hTK0FPZGgvWElZd2pnQzhEc293eUNuNnZtUXNraTlrRUJMT2luSHpKa1ZaOWM1allxL04vTlYzWmN2eGVoeklzRkFBTWl5NGZ0WXZIZWU4enpwb2JsVTRrRGlib0lJVDlsRW9XeEpRZmNWVy9meXQyUjdsTjcrTVdDd1I5bm56NnJOZXhuS1JUQ2NIcHJ4WUxHb3RRd2lGcWttaFErVTFwTlgwK1FCd1MyRC9DMlE3dG41UGpSb2VqV1doalBlNnhadzg5TEphNFVXemlWU3RNeGc5QTZUdXVWdnlmbm96WnBjK1orT0pSc3hacUN5YVhqakNySWYzRDl3cWNXS21FMW5OQUF1VWFJTmxmVHVnL3h3RFlrT1BTNmZ0RFhXUG1Qd2s3eXEzbzlBWUFjWjFTY2tjSmx5eC9FeVNsUytvU1V3NW1hZ2hYWTJFWXJQME05S000cWlPTU1qUUdyWEhidjd1TWp5NEFNUnY3QTE0cnk4RHBkVy9MTU1MVWRlREhRU3ZzRHVlOFMrM2czNXpSSlUyTzhEZmhLZzNiUkZlWDd3aWNtZmVyUnN2dXdkQS91NXM0WmRFbjlDTWs2bW45SDdEZmpnYzFiL3VYSTl3V3Z5Ry9rdm85bzl1Z0ZhZVFHOCs4dGR5bEpSZ3R5V3l2VWo2M3h2RXYvdVR2N2ZkQ0Q5L01VNkFNd3IraVV2azJZSTkxZzF6cnN2TWFMTExYczkrTzNVWFlWd2VMS2tlSFRCZ0FSMmFsUE5zVzYxUXRPbW1NRVYyUVoxRTlQSnIwYnZZcHVieFpuSUgzWmFLRDBaaU1NVTBPNmRDNzhRPT0iLCJrciI6IjQ4NGE1Mjk2Iiwic2hhcmRfaWQiOjIyMTk5NjA3M30.Y8zRJfeyg8J5rT-JO13bjyWmvUQW_jpEgqyL_XMCOyY'
 
 response = requests.post('https://api.stripe.com/v1/payment_methods', headers=headers, data=data)
+
+import requests
+
+headers = {
+    'accept': 'application/json',
+    'accept-language': 'en-US,en;q=0.9',
+    'content-type': 'application/x-www-form-urlencoded',
+    'origin': 'https://js.stripe.com',
+    'priority': 'u=1, i',
+    'referer': 'https://js.stripe.com/',
+    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-site',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+}
+
+data = {
+    'client_id': 'stripe-js',
+    'num_requests': '3',
+    'events': '[{"event_name":"elements.captcha.passive.success","created":1789078836385,"batching_enabled":true,"event_count":"110","os":"Windows","browserFamily":"Chrome","version":"6c540ed284","event_id":"1e02d4a0-5e51-4a37-9b34-dc3651c25627","team_identifier":"t_5","deploy_status":"main","browserClassification":"modern","browser_classification_v2":"2024","connection_rtt":"250","connection_downlink":"1.65","connection_effective_type":"4g","key":"pk_live_2T8mSGhZyE3A8I2kToOFE1R9","key_mode":"live","referrer":"https://esnorg.giveforms.com","stripe_js_id":"447fd8cb-e96a-4f6c-b350-db0d1fddc317","stripe_obj_id":"sobj-5600010a-ddda-4f17-85cd-e286802f4261","controller_load_time":"1789078766519","stripe_js_release_train":"v3","wrapper":"unknown","es_module":"false","browser_timezone":"America/New_York","embedded_in_mobile_sdk":"false","elements_init_source":"stripe.elements","deploy_status_fetch_failed":"false","isSafariPrivateMode":"false","deploy_status_time_to_fetch_ms":"5838","cdn_name":"Cloudfront","cdn_pop_dc":"LAX","experiments_exposed-elements_ce_human_security":"control","experiments_exposed-link_ce_conversion_unrecognized_aa":"control","experiments_exposed-link_ce_conversion_unrecognized_post_entry_aa":"control","isLinkInCardEnabled":"true","frame_width":"724","duration":"2","site_key":"463b917e-e264-403f-ad34-34af0ee10294","schema_validation":"failed"},{"event_name":"rum.stripejs","created":1789078836952,"batching_enabled":true,"event_count":"111","os":"Windows","browserFamily":"Chrome","version":"3","event_id":"42ca9090-0989-4703-8dc2-3f2708845bbd","team_identifier":"t_7","deploy_status":"main","browserClassification":"modern","browser_classification_v2":"2024","connection_rtt":"250","connection_downlink":"1.65","connection_effective_type":"4g","key":"pk_live_2T8mSGhZyE3A8I2kToOFE1R9","key_mode":"live","referrer":"https://esnorg.giveforms.com","stripe_js_id":"447fd8cb-e96a-4f6c-b350-db0d1fddc317","stripe_obj_id":"sobj-5600010a-ddda-4f17-85cd-e286802f4261","controller_load_time":"1789078766519","stripe_js_release_train":"v3","wrapper":"unknown","es_module":"false","browser_timezone":"America/New_York","embedded_in_mobile_sdk":"false","elements_init_source":"stripe.elements","deploy_status_fetch_failed":"false","isSafariPrivateMode":"false","deploy_status_time_to_fetch_ms":"5838","cdn_name":"Cloudfront","cdn_pop_dc":"LAX","experiments_exposed-elements_ce_human_security":"control","experiments_exposed-link_ce_conversion_unrecognized_aa":"control","experiments_exposed-link_ce_conversion_unrecognized_post_entry_aa":"control","isLinkInCardEnabled":"true","requestId":"req_AK18hgttt4wTKC","tokenType":"card","url":"https://api.stripe.com/v1/payment_methods","status":"200","start":"1789078836415","end":"1789078836952","resourceTiming[startTime]":"77078.2","resourceTiming[duration]":"520.9","resourceTiming[redirectStart]":"0","resourceTiming[redirectEnd]":"0","resourceTiming[fetchStart]":"77078.2","resourceTiming[domainLookupStart]":"77078.2","resourceTiming[domainLookupEnd]":"77078.2","resourceTiming[connectStart]":"77078.2","resourceTiming[connectEnd]":"77078.2","resourceTiming[secureConnectionStart]":"77078.2","resourceTiming[requestStart]":"77092.2","resourceTiming[responseStart]":"77595.8","resourceTiming[responseEnd]":"77599.1","paymentUserAgent":"stripe.js/6c540ed284; stripe-js-v3/6c540ed284","schema_validation":"passed"},{"event_name":"elements.create_payment_method.success","created":1789078836964,"batching_enabled":true,"event_count":"112","os":"Windows","browserFamily":"Chrome","version":"6c540ed284","event_id":"40384e41-b6fa-44dc-99b4-ec83da62eb5b","team_identifier":"t_5","deploy_status":"main","browserClassification":"modern","browser_classification_v2":"2024","connection_rtt":"250","connection_downlink":"1.65","connection_effective_type":"4g","key":"pk_live_2T8mSGhZyE3A8I2kToOFE1R9","key_mode":"live","referrer":"https://esnorg.giveforms.com","stripe_js_id":"447fd8cb-e96a-4f6c-b350-db0d1fddc317","stripe_obj_id":"sobj-5600010a-ddda-4f17-85cd-e286802f4261","controller_load_time":"1789078766519","stripe_js_release_train":"v3","wrapper":"unknown","es_module":"false","browser_timezone":"America/New_York","embedded_in_mobile_sdk":"false","elements_init_source":"stripe.elements","deploy_status_fetch_failed":"false","isSafariPrivateMode":"false","deploy_status_time_to_fetch_ms":"5838","cdn_name":"Cloudfront","cdn_pop_dc":"LAX","experiments_exposed-elements_ce_human_security":"control","experiments_exposed-link_ce_conversion_unrecognized_aa":"control","experiments_exposed-link_ce_conversion_unrecognized_post_entry_aa":"control","isLinkInCardEnabled":"true","frame_width":"724","object_id":"pm_1UEGKeDItA2xiqUeHvdKHGs1","object_kind":"payment_method","object_type":"card","object_livemode":"true","element":"cardNumber","usesLink":"false","hasValidMids":"true","schema_validation":"failed"}]',
+}
+
+response = requests.post('https://r.stripe.com/b', headers=headers, data=data)
+
+import requests
+
+cookies = {
+    '__stripe_mid': 'f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a',
+    '__stripe_sid': '0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447',
+    '_giveforms_session': 'TKtH57pMDqhTqBBp2Fmc8Xf85G0O5sheI8OCdMk%2B3WLxdNDK0cpdOcZmvYAqvIX%2FCIaGVHI5BUeMvXexYfsjLF%2FC6YGkqfRfWvPKJfW6ncrC85iLDilRl2Cm3KTWOdOsaq0otgvbtaHILqH7mE0%3D--gmWWtXsbzzBVo3K6--LgsBF09gbREGVNpJaYLnnQ%3D%3D',
+}
+
+headers = {
+    'accept': '*/*;q=0.5, text/javascript, application/javascript, application/ecmascript, application/x-ecmascript',
+    'accept-language': 'en-US,en;q=0.9',
+    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'origin': 'https://esnorg.giveforms.com',
+    'priority': 'u=1, i',
+    'referer': 'https://esnorg.giveforms.com/default-giveform',
+    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+    'x-csrf-token': 'L1sujkkTTnW7J0pTJYR3rLcBYOuGR7rFrtGBD8Zs+b74eU2BsNju8/go8kXa6K3f69TKgyPTxJyaOCsd5+CvsA==',
+    'x-requested-with': 'XMLHttpRequest',
+    # 'cookie': '__stripe_mid=f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a; __stripe_sid=0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447; _giveforms_session=TKtH57pMDqhTqBBp2Fmc8Xf85G0O5sheI8OCdMk%2B3WLxdNDK0cpdOcZmvYAqvIX%2FCIaGVHI5BUeMvXexYfsjLF%2FC6YGkqfRfWvPKJfW6ncrC85iLDilRl2Cm3KTWOdOsaq0otgvbtaHILqH7mE0%3D--gmWWtXsbzzBVo3K6--LgsBF09gbREGVNpJaYLnnQ%3D%3D',
+}
+
+data = {
+    'utf8': '✓',
+    'donation[user_id]': '311',
+    'donation[form_id]': '343',
+    'sf': 'ip1j20rpcx7343',
+    'bf': '31de13a219b4a2a961e40a75812ed546',
+    'idempotency_key_index': '1789078758147',
+    'donation[currency]': 'eur',
+    'donation[amount]': '1',
+    'donation[monthly]': '0',
+    'donation[real_amount]': '1.00',
+    'donation[used_text]': '',
+    'donation[utm_source]': '',
+    'donation[utm_medium]': '',
+    'donation[utm_campaign]': '',
+    'donation[utm_content]': '',
+    'p': '',
+    'donation[anonymous]': [
+        '0',
+        '1',
+    ],
+    'donation[first_name]': '',
+    'donation[last_name]': '',
+    'donation[email]': 'bu@gmail.com',
+    'donation[phone_home]': '',
+    'donation[donation_type]': 'credit_card',
+    'stripeToken': '',
+    'stripe_pm_id': 'pm_1UEGKeDItA2xiqUeHvdKHGs1',
+    'stripe_pi_id': '',
+    'financial_connections_account_id': '',
+    'stripe_public_key': 'pk_live_2T8mSGhZyE3A8I2kToOFE1R9',
+    'donation[cover_fee_checked]': '0',
+    'g-recaptcha-response-data[donation]': '0cAFcWeA7qxIWSkwMV91tUYynw5A5zmy-I9KwdnCqQ7wMsBVGwDzF8XbaLK46Zyt-D8ujuFU2MTJRBgMzTjazAsKWoz1EagqJYnXnjfyTArQAiVt-qVh3DeKgznhpB-MdLFck5fo9G3uSriHv8ajABhb5xCyoHEuS7g8U--nnfvIW6SAzCqc_qLsQzLoD6QXwn5Iw50icuGQAm4JwgGpbNR7TdY5xeb1c1xnPS3hdLRI36r9w9UZSEjXof5PXICU_PHemNplVhCo0838nBvI4xfFxNv0H-zLZUwMj5RPXTLwoQUHPgRgr_TKSL3e6lH9R9eX1KTzM1ao9UMmvaS_TYpSvwQCv111yRKle2DCfN34dXFdjKaWxvJkJLaoF_XdN-StYAHJUflVk5vlP4eJ2VqjaEGXjPxljhSDAD-zSlKopmN8u1WN4vMTrcK2d1LMSSMyFoH3B2RLOp3_AoeH4LvKJxS4DNArjamwFR4VJYz_ttLLy-pfCohU7iEz7i7Z8lfx-N1rQlIdUaYFziqnyXzWoAxGw5yJHXO4B8-oCMuBVSAzz5ObinVymQGePBMLp7_jdMDwNGIsKImT1pP-70qSFOArCagSmeuskKfM45U6ObsyjZhRLx8C_MTdJTTUfgaHT0YHln-58k-uppUtWcMvHzVm1BwnHQjDlfz1Rz9Gm5o5mE-uRFNfdydFO7MavDyGzp-xCcdL2CUAaDE1KXsLo9q2m1hAUtmc_cjoYfktgGPxHS0OrLcmhRo2fQfw5k5dEQattXxHIsSngFeyVSI5CfPTKqwf7Wz0H2M2V-TW2tgNZOEcrfwJsAxvtybI_pP7UgD9b1g_ECx4AD5Hvcsnrs77gI7uoiIR02yepJ22Cx3axGG8vqB8xa0qI1eNCsrNHFt5w0oJiBZxWbjB4d4fo_ybUY_pLPKBmrMy-_X44QSC1MsZAovtjRwBo98SUxNY7hkagZMHWf8RW6zaP_Ync7lwT2rKVwAXOUq9Xsicq-eU0MQTki_DoaYhfRRyEx4lcJ6nSnJvrVMDrnucFdCf-4N-sYJz8Fzf57VVmmQLHF_lmPFiuddrblmJdVjAPw5KoRCbLgKdvrQEY3RVwR4KH50VbzLYufpRJJggDS5ZDUkadUaDbjXt2n7-BWf7MCE44hU1D9O4tcTxR9G0J9FG-DaIvCzaT0WAshPEeW5V6sW6fjtW3I9QQ6w8F5xbffg-hoy9hWHJ7PZNSQT45KEj5MjkzuVwMcDNovsRNrIHoIf8blngldpl7WxREAEpUJrTYmwjFJnDaf6TmWJV08nv8vAxTnflOHpZFWIuFeXpc6bV48LTiu9IKdYPX8D2TOs4SfOFVDdLp4KTORYexcfcg-4nk47fwqDAM1pUzPMdokcfTDGMCmLJ7bk65nJtQ5VmLoZcSimLZZccMTHrf1hos0IPmUGRFJ3W97Pa28RcwWiduAK_4pTYQcLIFf6PjvWM76wIxWfEOHuPThrvxwvvWrLBuvi73x6uWcNCH9D9KBz1ey_nneF1f6KHH1ViUJ6E3M5ZuoVVnoV_zY2luvXxaZzlC4UZP26MNaY0N4TPCpLfdKC4T1ccAcJTAWDGgZIde6YyF-r6bsn7dL__6twhYrEAK_Si9sNKrcckNj4q1S39ZJQzgtElpfP-odAsEfBnw7ZoAIVLoaC5Gu5qssa6WR3JQ2b4bhQ02krdR47aTVZOanNoSefO3vtlbyiM9X1vBUTayeESMWTl4DMBXEdML44_yT0rKyOPvxbW_3kpFczwtplL8yuVkHKEc-RDqqGd4Z1uV5MCorU2dKIDfpWmb1Fuu0Gb470TnkZ9IYwwhzRVRLxl5DZNiEaTtNH0IbJ9QdI7I-6roEEaTAv6PULHXJ0zDaXOaOZAAS9W3d7eDjZA4hQe_Q1ll5xqeZyzfU2ulat2J0BpOo4zdvgzwQOMPszoYy1BH-qy7b-gEI-k6Avz9pMvQSG57t0xTmhIndFO4uUd8YE9YvjgRY7kEor0QaUCBrRFhHDs8np46QWYrhBkMWZ5Fi83HeKplDRIrjdP-EQeifPdUeiazv82J6KQmbljKs_jCFEZ4XBn80gar46LoTrmK7xzKmUm240zg5rC7hwFx1_5D0Z9V2swZLHisKC77tci_Mw1c-t1LpqOCAYHpbk7HoWRq2tgSlk-dzhwiQs1YUNQYJm_T51hi2bVZYmIfX_GLGfBeW_ABJ1_w8VeTa-oZzoFVKtUY08dEzJXEs6M2V0WJhMWshdEawoaZ1fJ0RXwWKC2iJ-S-wdsDskxVJ2yMnRF6CNt1pVjwgj4PpJI4cTyg9_W8kJOUIwhLBIkIWxNO54_F1tIR1zVaFgDOczJ3daZQsJEumNOXimG2NAp4zdxH3ckMA0Wg7FRnZ717M32T8BWUa6eOAYzg2hnshP1vejQI',
+    'g-recaptcha-response': '',
+}
+
+response = requests.post('https://esnorg.giveforms.com/donations', cookies=cookies, headers=headers, data=data)
+
+import requests
+
+headers = {
+    'accept': 'application/json',
+    'accept-language': 'en-US,en;q=0.9',
+    'content-type': 'application/x-www-form-urlencoded',
+    'origin': 'https://js.stripe.com',
+    'priority': 'u=1, i',
+    'referer': 'https://js.stripe.com/',
+    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-site',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+}
+
+data = 'type=card&billing_details[name]=Anonymous&billing_details[address][postal_code]=32839&card[number]=5523426692360534&card[cvc]=972&card[exp_month]=08&card[exp_year]=29&guid=ff9d84b2-8755-4c07-94b0-5ef6f83eaeac71e276&muid=f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a&sid=0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447&payment_user_agent=stripe.js%2F6c540ed284%3B+stripe-js-v3%2F6c540ed284%3B+split-card-element&referrer=https%3A%2F%2Fesnorg.giveforms.com&time_on_page=346757&client_attribution_metadata[client_session_id]=447fd8cb-e96a-4f6c-b350-db0d1fddc317&client_attribution_metadata[merchant_integration_source]=elements&client_attribution_metadata[merchant_integration_subtype]=split-card-element&client_attribution_metadata[merchant_integration_version]=2017&client_attribution_metadata[wallet_config_id]=506d5d01-2065-44bd-a9e9-ea2bf632c32a&key=pk_live_2T8mSGhZyE3A8I2kToOFE1R9'
+
+response = requests.post('https://api.stripe.com/v1/payment_methods', headers=headers, data=data)

